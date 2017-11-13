@@ -8,7 +8,6 @@
 #include <StaticConstants.au3>
 #include <MsgBoxConstants.au3>
 #include <wmp.au3>
-
 #include <Zip.au3>
 #include <FileConstants.au3>
 
@@ -17,6 +16,7 @@ Opt("GUICoordMode", 1)
 Opt('WINTITLEMATCHMODE', 4)
 
 local $tbpos = ControlGetPos("classname=Shell_TrayWnd", "","")
+Global $igh_ini = "igf.ini"
 Global $win_width = @DesktopWidth
 Global $win_height = @DesktopHeight-$tbpos[3]
 Global $pic_height = 9/16 * $win_width
@@ -139,8 +139,10 @@ Func GetSection($section,$w)
  EndFunc
 
  Func Welcome()
+   FileChangeDir($owDir);
    local $welcome = GUICreate("iGF",600,300)
    GUICtrlCreatePic('igf-open.jpg',0,0,600,120)
+   GUICtrlCreateLabel('https://github.com/actiopossesivo/igfiction',10,270,580,30)
    $browse = GUICtrlCreateButton("Open",490,130,100)
    GUISetState(@SW_SHOW)
 
@@ -148,7 +150,8 @@ Func GetSection($section,$w)
 	  local $click = GUIGetMsg()
 	  Select
 		 Case $click = $GUI_EVENT_CLOSE
-			igf_exit()
+			GUIDelete()
+			Exit
 		 Case $click = $browse
 			$igf_file = browse($welcome)
 			GUIDelete($welcome)
@@ -174,3 +177,24 @@ Func browse($w)
    return $sFileOpenDialog
 
 EndFunc
+
+Func GetDir($sFilePath)
+
+    Local $aFolders = StringSplit($sFilePath, "\")
+    Local $iArrayFoldersSize = UBound($aFolders)
+    Local $FileDir = ""
+
+    If (Not IsString($sFilePath)) Then
+        Return SetError(1, 0, -1)
+    EndIf
+
+    $aFolders = StringSplit($sFilePath, "\")
+    $iArrayFoldersSize = UBound($aFolders)
+
+    For $i = 1 To ($iArrayFoldersSize - 2)
+        $FileDir &= $aFolders[$i] & "\"
+    Next
+
+    Return $FileDir
+
+EndFunc   ;==>GetDir

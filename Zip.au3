@@ -9,9 +9,9 @@
 ;
 ; ------------------------------------------------------------------------------
 
-If UBound($CMDLine) > 1 Then
-	If $CMDLine[1] <> "" Then _Zip_VirtualZipOpen()
-EndIf
+;If UBound($CMDLine) > 1 Then
+;	If $CMDLine[1] <> "" Then _Zip_VirtualZipOpen()
+;EndIf
 
 ;===============================================================================
 ;
@@ -29,7 +29,7 @@ Func _Zip_Create($hFilename)
 	FileWrite($hFp, $sString)
 	If @error Then Return SetError(1,0,0)
 	FileClose($hFp)
-	
+
 	While Not FileExists($hFilename)
 		Sleep(10)
 	Wend
@@ -450,14 +450,14 @@ EndFunc
 ; Notes:			none
 ;
 ;===============================================================================
-Func _Zip_VirtualZipOpen()
-	$ZipSplit = StringSplit($CMDLine[1], ",")
-	$ZipName = $ZipSplit[1]
-	$ZipFile = $ZipSplit[2]
-	_Zip_Unzip($ZipName, $ZipFile, @TempDir & "\", 4+16) ;no progress + yes to all
-	If @error Then Return SetError(@error,0,0)
-	ShellExecute(@TempDir & "\" & $ZipFile)
-EndFunc
+;Func _Zip_VirtualZipOpen()
+;	$ZipSplit = StringSplit($CMDLine[1], ",")
+;	$ZipName = $ZipSplit[1]
+;	$ZipFile = $ZipSplit[2]
+;	_Zip_Unzip($ZipName, $ZipFile, @TempDir & "\", 4+16) ;no progress + yes to all
+;	If @error Then Return SetError(@error,0,0)
+;	ShellExecute(@TempDir & "\" & $ZipFile)
+;EndFunc
 
 ;===============================================================================
 ;
@@ -510,7 +510,7 @@ Func _GetIcon($file, $ReturnType = 0)
 	$FileType = $FileType[UBound($FileType)-1]
 	$FileParam = RegRead("HKEY_CLASSES_ROOT\." & $FileType, "")
 	$DefaultIcon = RegRead("HKEY_CLASSES_ROOT\" & $FileParam & "\DefaultIcon", "")
-	
+
 	If Not @error Then
 		$IconSplit = StringSplit($DefaultIcon, ",")
 		ReDim $IconSplit[3]
@@ -520,7 +520,7 @@ Func _GetIcon($file, $ReturnType = 0)
 		$Iconfile = @SystemDir & "\shell32.dll"
 		$IconID = -219
 	EndIf
-	
+
 	If $ReturnType = 0 Then
 		Return $Iconfile
 	Else

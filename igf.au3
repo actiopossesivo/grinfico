@@ -1,13 +1,18 @@
 #AutoIt3Wrapper_icon=igf-icon.ico
+#pragma compile(AutoItExecuteAllowed, True)
 #include <igf-function.au3>
 
-Global $igh_ini = "igf.ini"
+Global $direct = 0
+Global $owDir = @WorkingDir
 
 if $CmdLine[0]>0 Then
    $igf_ini = $CmdLine[1]
+   $wDir = GetDir($igf_ini)
+   FileChangeDir($wDir);
 Else
+   $direct = 0
    $igf_pack = Welcome()
-   DirRemove(@WorkingDir&"/play/",1)
+   if FileExists(@WorkingDir&"/play/")==1 Then DirRemove(@WorkingDir&"/play/",1)
    DirCreate(@WorkingDir&"/play/")
    FileChangeDir ( @WorkingDir&"/play/" )
     _Zip_UnzipAll($igf_pack, @WorkingDir, 1)
@@ -16,7 +21,7 @@ Endif
 
 ReadConf()
 igf_main()
-igf_exit()
+igf_exit($direct)
 
 Func igf_main()
 
@@ -33,9 +38,13 @@ Func igf_main()
 
 EndFunc
 
-Func igf_exit()
-	GUIDelete()
-	Exit
+Func igf_exit($d)
+    if $d == 1 Then
+	  GUIDelete()
+	  Exit
+   Else
+	  Welcome()
+   Endif
 EndFunc
 
 Func OpenSection($section,$s)
@@ -100,7 +109,7 @@ Func OpenSection($section,$s)
 
 	While 1
 		$click = GUIGetMsg()
-		If $click == $GUI_EVENT_CLOSE Then igf_exit()
+		If $click == $GUI_EVENT_CLOSE Then igf_exit($direct)
 		For $n = 0 to UBound($act)-1
 			If $click == $act[$n] Then
 			OpenSection($act_param[$n],1)
