@@ -141,9 +141,13 @@ Func GetSection($section,$w)
  Func Welcome()
    FileChangeDir($owDir);
    local $welcome = GUICreate("iGF",600,300)
-   GUICtrlCreatePic('igf-open.jpg',0,0,600,120)
+   GUICtrlCreateLabel("IGF: Interactive Graphical Fictions",0,0,600,120,$SS_CENTER+$SS_CENTERIMAGE)
+   GUICtrlSetBkColor(-1,0x000066)
+   GUICtrlSetColor(-1,0xEEEEEE)
+   GUICtrlSetFont(-1,24,700,0)
+   ;GUICtrlCreatePic('igf-open.jpg',0,0,600,120)
    GUICtrlCreateLabel('https://github.com/actiopossesivo/igfiction',10,270,580,30)
-   $browse = GUICtrlCreateButton("Open",490,130,100)
+   $browse = GUICtrlCreateButton("Open Package",490,130,100)
    GUISetState(@SW_SHOW)
 
    While 1

@@ -1,5 +1,3 @@
-#AutoIt3Wrapper_icon=igf-icon.ico
-#pragma compile(AutoItExecuteAllowed, True)
 #include <igf-function.au3>
 
 Global $direct = 0
