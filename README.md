@@ -4,6 +4,7 @@ Interactive Graphical Fictions
 ### Instalation
  * Create C:\igf
  * Create C:\igf\games
+ * Put the script or compiled script (.exe) in C:\igf
  
 ### Requirement
  * The .igf files (The Game)
@@ -12,6 +13,9 @@ Interactive Graphical Fictions
 
 ### Demo
 Goto https://goo.gl/hkh7gh and download "demo.zip" into \igf\games, then run the script or compiled files (.exe)
+
+### Authoring
+See the wiki(https://github.com/actiopossesivo/igfiction/wiki)
 
 ### Source :
 https://github.com/actiopossesivo/igfiction
