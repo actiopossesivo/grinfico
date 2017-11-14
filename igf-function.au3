@@ -63,6 +63,21 @@ Func Text($nsep,$text)
 
 EndFunc
 
+Func Hotspot($nsep,$str)
+	if $nsep == 0 Then $nsep = 20
+	local $aH = _StringExplode ( $str, "|");
+	local $hs = GUICtrlCreateLabel("",$aH[1],$aH[2],$aH[3],$aH[4])
+	GUICtrlSetBkColor($hs,$GUI_BKCOLOR_TRANSPARENT)
+	GUICtrlSetCursor($hs,0)
+
+   _ArrayAdd($act_param,$ah[0])
+
+    local $res[2]
+	$res[1] = $hs
+	$res[0] = $nsep
+	return $res
+EndFunc
+
 Func ActButton($nsep,$text)
 	if $nsep == 0 Then $nsep = 20
 	local $bpost[4]

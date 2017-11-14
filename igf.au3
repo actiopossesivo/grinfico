@@ -95,6 +95,11 @@ Func OpenSection($section,$s)
 			$p = $ini[$i][1]
 			$res = Text($res[0],$p)
 		Endif
+		if $ini[$i][0] == 'hotspot' Then
+			$p = $ini[$i][1]
+			$res = Hotspot($res[0],$p)
+			_ArrayAdd($act, $res[1])
+		Endif
 		if $ini[$i][0] == 'act' Then
 			$p = _StringExplode ( $ini[$i][1], "|"); 0 - section, 1 - text
 			$res = ActButton($res[0],$p[1])
@@ -116,7 +121,3 @@ Func OpenSection($section,$s)
 	WEnd
 
  EndFunc
-
-;	_ArrayDisplay($act, "$act")
-;	_ArrayDisplay($act_param, "$act_param")
-
