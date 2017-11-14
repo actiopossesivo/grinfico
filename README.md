@@ -1,6 +1,8 @@
 # igfiction
 Interactive Graphical Fictions
 
+I create these little programs as experiments to have a play with the language and bring back old memories of old games I used to play.  I would gladly accept pointers from others to improve the code and make it more efficient, or simplify the code. 
+
 ### Instalation
  * Create C:\igf
  * Create C:\igf\games
