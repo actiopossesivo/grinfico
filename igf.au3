@@ -4,17 +4,17 @@ Global $direct = 0
 Global $owDir = @WorkingDir
 
 if $CmdLine[0]>0 Then
-   $igf_ini = $CmdLine[1]
-   $wDir = GetDir($igf_ini)
-   FileChangeDir($wDir);
+	$igf_ini = $CmdLine[1]
+	$wDir = GetDir($igf_ini)
+	FileChangeDir($wDir);
 Else
-   $direct = 0
-   $igf_pack = Welcome()
-   if FileExists(@WorkingDir&"/play/")==1 Then DirRemove(@WorkingDir&"/play/",1)
-   DirCreate(@WorkingDir&"/play/")
-   FileChangeDir ( @WorkingDir&"/play/" )
-    _Zip_UnzipAll($igf_pack, @WorkingDir, 1)
-   $igf_ini = "igf.ini"
+	$direct = 0
+	$igf_pack = Welcome()
+	if FileExists(@WorkingDir&"/play/")==1 Then DirRemove(@WorkingDir&"/play/",1)
+	DirCreate(@WorkingDir&"/play/")
+	FileChangeDir ( @WorkingDir&"/play/" )
+	_Zip_UnzipAll($igf_pack, @WorkingDir, 1)
+	$igf_ini = "igf.ini"
 Endif
 
 ReadConf()
@@ -37,12 +37,12 @@ Func igf_main()
 EndFunc
 
 Func igf_exit($d)
-    if $d == 1 Then
-	  GUIDelete()
-	  Exit
-   Else
-	  Welcome()
-   Endif
+	if $d == 1 Then
+		GUIDelete()
+		Exit
+	Else
+		Welcome()
+	Endif
 EndFunc
 
 Func OpenSection($section,$s)

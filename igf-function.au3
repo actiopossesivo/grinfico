@@ -47,7 +47,7 @@ Func Text($nsep,$text)
 	$bpost[3]= 16 ; left
 	$ntop = $bpost[1] + $nsep + 24
 
-    local $btn = GUICtrlCreateLabel($text,$bpost[3],$bpost[2],$bpost[0],$bpost[1],-1)
+	 local $btn = GUICtrlCreateLabel($text,$bpost[3],$bpost[2],$bpost[0],$bpost[1],-1)
 	GUICtrlSetBkColor($btn,$GUI_BKCOLOR_TRANSPARENT)
 	GUICtrlSetFont($btn, $fz, 400, 0)
 	GUICtrlSetColor($btn,0xC0C0C0)
@@ -70,9 +70,9 @@ Func Hotspot($nsep,$str)
 	GUICtrlSetBkColor($hs,$GUI_BKCOLOR_TRANSPARENT)
 	GUICtrlSetCursor($hs,0)
 
-   _ArrayAdd($act_param,$ah[0])
+	_ArrayAdd($act_param,$ah[0])
 
-    local $res[2]
+	 local $res[2]
 	$res[1] = $hs
 	$res[0] = $nsep
 	return $res
@@ -154,18 +154,18 @@ Func GetSection($section,$w)
  EndFunc
 
  Func Welcome()
-   FileChangeDir($owDir);
-   local $welcome = GUICreate("iGF",600,300)
-   GUICtrlCreateLabel("IGF: Interactive Graphical Fictions",0,0,600,120,$SS_CENTER+$SS_CENTERIMAGE)
-   GUICtrlSetBkColor(-1,0x000066)
-   GUICtrlSetColor(-1,0xEEEEEE)
-   GUICtrlSetFont(-1,24,700,0)
-   ;GUICtrlCreatePic('igf-open.jpg',0,0,600,120)
-   GUICtrlCreateLabel('https://github.com/actiopossesivo/igfiction',10,270,580,30)
-   $browse = GUICtrlCreateButton("Open Package",490,130,100)
-   GUISetState(@SW_SHOW)
+	FileChangeDir($owDir);
+	local $welcome = GUICreate("iGF",600,300)
+	GUICtrlCreateLabel("IGF: Interactive Graphical Fictions",0,0,600,120,$SS_CENTER+$SS_CENTERIMAGE)
+	GUICtrlSetBkColor(-1,0x000066)
+	GUICtrlSetColor(-1,0xEEEEEE)
+	GUICtrlSetFont(-1,24,700,0)
+	;GUICtrlCreatePic('igf-open.jpg',0,0,600,120)
+	GUICtrlCreateLabel('https://github.com/actiopossesivo/igfiction',10,270,580,30)
+	$browse = GUICtrlCreateButton("Open Package",490,130,100)
+	GUISetState(@SW_SHOW)
 
-   While 1
+	While 1
 	  local $click = GUIGetMsg()
 	  Select
 		 Case $click = $GUI_EVENT_CLOSE
@@ -176,44 +176,44 @@ Func GetSection($section,$w)
 			GUIDelete($welcome)
 			exitloop
 	  EndSelect
-   WEnd
+	WEnd
 
-   return $igf_file
+	return $igf_file
 EndFunc
 
 Func browse($w)
-   Local Const $sMessage = "Open IGF zip Package"
-   Local $sFileOpenDialog = FileOpenDialog($sMessage, @WorkingDir & "\games\", "All (*.zip)", $FD_FILEMUSTEXIST)
-   If @error Then
+	Local Const $sMessage = "Open IGF zip Package"
+	Local $sFileOpenDialog = FileOpenDialog($sMessage, @WorkingDir & "\games\", "All (*.zip)", $FD_FILEMUSTEXIST)
+	If @error Then
 		FileChangeDir(@ScriptDir)
 		GUIDelete($w)
 		Welcome()
-   Else
-        FileChangeDir(@ScriptDir)
-        $sFileOpenDialog = StringReplace($sFileOpenDialog, "|", @CRLF)
-   EndIf
+	Else
+		  FileChangeDir(@ScriptDir)
+		  $sFileOpenDialog = StringReplace($sFileOpenDialog, "|", @CRLF)
+	EndIf
 
-   return $sFileOpenDialog
+	return $sFileOpenDialog
 
 EndFunc
 
 Func GetDir($sFilePath)
 
-    Local $aFolders = StringSplit($sFilePath, "\")
-    Local $iArrayFoldersSize = UBound($aFolders)
-    Local $FileDir = ""
+	 Local $aFolders = StringSplit($sFilePath, "\")
+	 Local $iArrayFoldersSize = UBound($aFolders)
+	 Local $FileDir = ""
 
-    If (Not IsString($sFilePath)) Then
-        Return SetError(1, 0, -1)
-    EndIf
+	 If (Not IsString($sFilePath)) Then
+		  Return SetError(1, 0, -1)
+	 EndIf
 
-    $aFolders = StringSplit($sFilePath, "\")
-    $iArrayFoldersSize = UBound($aFolders)
+	 $aFolders = StringSplit($sFilePath, "\")
+	 $iArrayFoldersSize = UBound($aFolders)
 
-    For $i = 1 To ($iArrayFoldersSize - 2)
-        $FileDir &= $aFolders[$i] & "\"
-    Next
+	 For $i = 1 To ($iArrayFoldersSize - 2)
+		  $FileDir &= $aFolders[$i] & "\"
+	 Next
 
-    Return $FileDir
+	 Return $FileDir
 
-EndFunc   ;==>GetDir
+EndFunc	;==>GetDir
