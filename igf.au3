@@ -1,5 +1,7 @@
 #include <igf-function.au3>
 
+FileInstall("igf-open.jpg",@Scriptdir&"/igf-logo.jpg")
+
 Global $direct = 0
 Global $owDir = @WorkingDir
 
@@ -37,10 +39,14 @@ Func igf_main()
 EndFunc
 
 Func igf_exit($d)
+
+   	if FileExists(@WorkingDir&"/play/")==1 Then DirRemove(@WorkingDir&"/play/",1)
+
 	if $d == 1 Then
 		GUIDelete()
 		Exit
 	Else
+		GUIDelete()
 		Welcome()
 	Endif
 EndFunc

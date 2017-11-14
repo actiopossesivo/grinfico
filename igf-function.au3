@@ -47,7 +47,7 @@ Func Text($nsep,$text)
 	$bpost[3]= 16 ; left
 	$ntop = $bpost[1] + $nsep + 24
 
-	 local $btn = GUICtrlCreateLabel($text,$bpost[3],$bpost[2],$bpost[0],$bpost[1],-1)
+	local $btn = GUICtrlCreateLabel($text,$bpost[3],$bpost[2],$bpost[0],$bpost[1],-1)
 	GUICtrlSetBkColor($btn,$GUI_BKCOLOR_TRANSPARENT)
 	GUICtrlSetFont($btn, $fz, 400, 0)
 	GUICtrlSetColor($btn,0xC0C0C0)
@@ -131,7 +131,7 @@ EndFunc
 Func DisplayVideo($vid)
 	$wmp = _wmpcreate(1,40, 0,$win_width-80, $pic_height)
 	_wmpvalue( $wmp, "nocontrols" );hides controls
-	_wmploadmedia( $wmp,	$vid);loads media
+	_wmploadmedia( $wmp, $vid);loads media
 	return $wmp;
 EndFunc
 
@@ -156,11 +156,7 @@ Func GetSection($section,$w)
  Func Welcome()
 	FileChangeDir($owDir);
 	local $welcome = GUICreate("iGF",600,300)
-	GUICtrlCreateLabel("IGF: Interactive Graphical Fictions",0,0,600,120,$SS_CENTER+$SS_CENTERIMAGE)
-	GUICtrlSetBkColor(-1,0x000066)
-	GUICtrlSetColor(-1,0xEEEEEE)
-	GUICtrlSetFont(-1,24,700,0)
-	;GUICtrlCreatePic('igf-open.jpg',0,0,600,120)
+	GUICtrlCreatePic(@ScriptDir&'/igf-logo.jpg',0,0,600,120)
 	GUICtrlCreateLabel('https://github.com/actiopossesivo/igfiction',10,270,580,30)
 	$browse = GUICtrlCreateButton("Open Package",490,130,100)
 	GUISetState(@SW_SHOW)
@@ -169,8 +165,7 @@ Func GetSection($section,$w)
 	  local $click = GUIGetMsg()
 	  Select
 		 Case $click = $GUI_EVENT_CLOSE
-			GUIDelete()
-			Exit
+			igf_exit(1)
 		 Case $click = $browse
 			$igf_file = browse($welcome)
 			GUIDelete($welcome)
