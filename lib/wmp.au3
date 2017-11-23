@@ -11,9 +11,10 @@ Func _wmpcreate($show, $left, $top, $width = 100, $height = 100)
    If $oWMP = 0 Then Return 0
    $oWMP.settings.autoStart = "False"
    If $show = 1 Then
-	  GUICtrlCreateObj($oWMP, $left, $top, $width, $height)
+	  $ooWMP = GUICtrlCreateObj($oWMP, $left, $top, $width, $height)
    EndIf
-   Return $oWMP
+   local $res[2] = [ $oWMP, $ooWMP ]
+   Return $res
 EndFunc
 #cs
 _wmploadmedia( $object, $URL, $autostart = 1 )
