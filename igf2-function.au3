@@ -42,6 +42,13 @@ Global $igf_win
 Global $igf_pa
 Global $menu
 Global $scene
+Global $step = 0
+Global $score = 0
+Global $been[0]
+
+Global $ca[0]
+Global $ct[0]
+Global $trna[0]
 
 Func ReadSection($section,$saved_data)
 
@@ -59,27 +66,33 @@ Func ReadSection($section,$saved_data)
 
 	ReDim $data_tosav[0][2]
 
+	_ArrayAdd($been,$section)
+
 	GUICtrlSetState($menu[8][0],$GUI_ENABLE)
-
-	if $current>=2 Then
-		GUICtrlSetState($menu[6][0],$GUI_ENABLE)
-		GUICtrlSetState($menu[7][0],$GUI_ENABLE)
-
-		_ArrayAdd($data_tosav,"keyword"&"|"&$keyword)
-		_ArrayAdd($data_tosav,"section"&"|"&$section)
-
-	Endif
 
 	for $i = 0 to Ubound($opt)-1
 		Switch StringLower($opt[$i][0])
+			Case "scene"
+				if $scene == 0 Then
+					$scene = GUICtrlCreatePic($opt[$i][1],0,0,$pa_width,$pa_height)
+					GUICtrlSetState($scene,$GUI_DISABLE)
+				Else
+					GUICtrlSetImage($scene,$opt[$i][1])
+				Endif
+			Case "score"
+				; beenhere?
+				local $aBeen = _ArrayUnique($been);
+				local $pass= 0
+				for $i = 0 to Ubound( $aBeen )-1
+				   if $aBeen[$i] == $section Then $pass=1
+				Next
+				if $pass=0 Then $score = $score + $opt[$i][1]
 			Case "next"
 				$n = $current + 1
 				$next_page = $Sections[$n]
 			Case "back"
 				$n = $current - 1
 				$next_page = $Sections[$n]
-			Case "scene"
-				GUICtrlSetImage($scene,$opt[$i][1])
 			Case "spot"
 				_ArrayAdd($gspot,$opt[$i][1],0,"|")
 			Case "button"
@@ -97,6 +110,17 @@ Func ReadSection($section,$saved_data)
 
 		EndSwitch
 	Next
+
+	if $current>=2 Then
+		GUICtrlSetState($menu[6][0],$GUI_ENABLE)
+		GUICtrlSetState($menu[7][0],$GUI_ENABLE)
+
+		_ArrayAdd($data_tosav,"keyword"&"|"&$keyword)
+		_ArrayAdd($data_tosav,"section"&"|"&$section)
+		_ArrayAdd($data_tosav,"step"&"|"&$step)
+		_ArrayAdd($data_tosav,"score"&"|"&$score)
+
+	Endif
 
 	if Ubound($png_obj)>-1 Then ClearingGUICtrl($png_obj)
 
@@ -119,6 +143,7 @@ Func ReadSection($section,$saved_data)
 	if $next_page<>"" Then ReadSection($next_page,$saved_data)
 
 	if Ubound($gbutton)>-1 OR Ubound($gspot)>-1 OR Ubound($gvbutton)>-1 Then
+		$step = $step +1
 		Prompting($gbutton,$gspot,$gvbutton)
 	EndIf
 
@@ -142,8 +167,8 @@ EndFunc
 Func Prompting($button, $spot, $vbutton)
 	local $top = 0
 	local $left = 0
-	local $ca[0]
-	local $trna[0]
+	ReDim $ca[0]
+	ReDim $trna[0]
 	local $B = Ubound($button)
 	local $S = Ubound($spot)
 	local $V = Ubound($vbutton)
@@ -258,6 +283,8 @@ Func Texting($TXT,$goto)
 EndFunc
 
 Func Text($top,$txt,$goto="")
+
+	ReDim $ct[0] ; Well?
 
 	local $trnz = PutPNG($dialog_bgr,-$pa_width,0,0,0)
 	GUICtrlSetState($trnz,$GUI_DISABLE)
@@ -490,8 +517,21 @@ Func IGF_SavSave()
 	If @error Then
 		ConsoleWrite("IGF_SavSave Error:"&$Save_file&" - "&@error)
 	Else
-		_ArrayDisplay($data_tosav)
+		; been
+		local $aBeen = _ArrayUnique($been);
+		local $sBeen = ""
+		for $i = 1 to Ubound( $aBeen )-1
+			$sBeen = $aBeen[$i] & "," & $sBeen
+		Next
+		$sBeen = StringTrimRight($sBeen,1)
+		;_ArrayDisplay($aBeen)
+		;msgbox(0,'',$sBeen)
+		_ArrayAdd($data_tosav,"been"&"|"&$sBeen)
+
 		IniWriteSection ( $save_file, "data", $data_tosav,0 )
+
+		Global $been[0]
+
 	Endif
 	FileChangeDir(@Scriptdir&"/play")
 	return ""
@@ -506,8 +546,19 @@ Func IGF_SavLoad()
 		$saved_data = IGF_SavRead($save_file)
 		if $keyword == $saved_data[1][1] Then
 			$section = $saved_data[2][1]
+			$step = $saved_data[3][1]
+			$abeen = $saved_data[5][1]
+			$score = $saved_data[4][1]
 		Endif
+
+		global $been[] = _StringExplode ( $aBeen, "," )
+
+		; Jus like restart playarea
+
+		GUIDelete($igf_pa)
+		IGF_PlayArea()
 		IGF_Start($section,$saved_data)
+
 	Endif
 EndFunc
 

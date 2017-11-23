@@ -23,7 +23,7 @@ Func IGF_ReadMe()
 EndFunc
 
 Func IGF_About()
-	msgbox(0,"About IgFE', _
+	msgbox(0,"About IgFE", _
 		"Interactive Graphical Fictions Engine"&@CRLF&@CRLF& _
 		"Engine:"&@CRLF&"https://github.com/actiopossesivo/igfiction"&@CRLF&@CRLF& _
 		"Wiki:"&@CRLF&"https://goo.gl/bQW68P"&@CRLF)
