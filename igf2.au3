@@ -9,7 +9,7 @@ RunOnce()
 
 local $menu = IGF_Win()
 local $playarea = IGF_PlayArea()
-local $top = 0;
+local $top = 0
 Global $png_obj[0]
 Global $saved_data[0][2]
 Global $data_tosav[0][2]

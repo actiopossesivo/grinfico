@@ -1,3 +1,5 @@
+#include-once
+
 #include <GUIConstantsEx.au3>
 #include <WindowsConstants.au3>
 #include <WinAPIFiles.au3>
@@ -17,8 +19,9 @@ local $tbpos =_DeskTopVisibleArea()
 
 Global $igf_ini = "scenario.ini"
 
-Global $pa_width = 800;
-Global $pa_height = 480;
+Global $pa_width = 800
+Global $pa_height = 480
+Global $pa_vidheight = 400
 Global $pa_title = "Untitled"
 Global $pa_bgcolor = "333333"
 Global $pa_color = "ffffff"
@@ -48,13 +51,13 @@ Func ReadSection($section,$saved_data)
 	local $gtext[0]
 	local $gpng[0][5]
 	local $gbutton[0][2]
+	local $gvbutton[0][2]
 	local $gspot[0][5]
 	local $next_page ="", $goto = ""
 	local $n
+	local $video
 
 	ReDim $data_tosav[0][2]
-
-	;ConsoleWrite("-<"&$section&" "&$current&">-")
 
 	GUICtrlSetState($menu[8][0],$GUI_ENABLE)
 
@@ -81,10 +84,14 @@ Func ReadSection($section,$saved_data)
 				_ArrayAdd($gspot,$opt[$i][1],0,"|")
 			Case "button"
 				_ArrayAdd($gbutton,$opt[$i][1],0,"|")
+			Case "vbutton"
+				_ArrayAdd($gvbutton,$opt[$i][1],0,"|")
 			Case "text"
 				_ArrayAdd($gtext,$opt[$i][1])
 			Case "png"
 				_ArrayAdd($gpng,$opt[$i][1],0,"|")
+			Case "vid"
+				$video = $opt[$i][1]
 			Case "goto"
 				$goto = $opt[$i][1]
 
@@ -92,6 +99,12 @@ Func ReadSection($section,$saved_data)
 	Next
 
 	if Ubound($png_obj)>-1 Then ClearingGUICtrl($png_obj)
+
+	if $video<>"" Then
+		$ovid = vidplay($video,0,0,$pa_width,$pa_vidheight)
+		GUICtrlSetState($ovid,$GUI_DISABLE)
+		_ArrayAdd($png_obj,$ovid)
+	Endif
 
 	if Ubound($gpng)>-1 Then
 		for $i = 0 to Ubound($gpng)-1
@@ -105,8 +118,8 @@ Func ReadSection($section,$saved_data)
 
 	if $next_page<>"" Then ReadSection($next_page,$saved_data)
 
-	if Ubound($gbutton)>-1 OR Ubound($gspot)>-1 Then
-		Prompting($gbutton,$gspot)
+	if Ubound($gbutton)>-1 OR Ubound($gspot)>-1 OR Ubound($gvbutton)>-1 Then
+		Prompting($gbutton,$gspot,$gvbutton)
 	EndIf
 
 	if $goto <> "" Then ReadSection($goto,$saved_data)
@@ -126,12 +139,14 @@ Func ClearingGUICtrl($a)
 	Next
 EndFunc
 
-Func Prompting($button, $spot)
-	local $top = 0;
+Func Prompting($button, $spot, $vbutton)
+	local $top = 0
+	local $left = 0
 	local $ca[0]
 	local $trna[0]
 	local $B = Ubound($button)
 	local $S = Ubound($spot)
+	local $V = Ubound($vbutton)
 	local $goto[0]
 
 	for $i = 0 to $B-1
@@ -139,6 +154,14 @@ Func Prompting($button, $spot)
 		$top = $res[0]
 		_ArrayAdd($ca,$res[1])
 		_ArrayAdd($goto,$button[$i][0])
+		_ArrayAdd($trna,$res[2])
+	Next
+
+	for $i = 0 to $V-1
+		local $res = vPrompt($vbutton[$i][1],$left,$V)
+		$left= $res[0]
+		_ArrayAdd($ca,$res[1])
+		_ArrayAdd($goto,$vbutton[$i][0])
 		_ArrayAdd($trna,$res[2])
 	Next
 
@@ -170,14 +193,41 @@ Func Prompting($button, $spot)
 
 EndFunc
 
+Func vPrompt($txt,$left,$V)
+
+	Local $width = 120
+	Local $height = 1.6*$fontsize
+	local $top = $pa_height - ($height*2)
+
+	local $trnz = PutPNG($dialog_bgr,-$pa_width,0,0,0)
+	if $left==0 then $left = $pa_width/2 - ((($width+32)*$V)/2)
+	if $left < 0 then $left = $pa_width*.05
+
+	local $tz = [ $left, $top, $width, $height ]
+	Local $act = GUICtrlcreateLabel($txt, $tz[0],$tz[1],$tz[2],$tz[3], $SS_CENTER)
+	GUICtrlSetColor($act,'0x'&$pa_color)
+	GUICtrlSetFont($act,$fontsize,700)
+
+	GUICtrlSetBkColor($act,$GUI_BKCOLOR_TRANSPARENT)
+	GuiCtrlSetState($act, $GUI_ONTOP)
+	GUICtrlSetCursor($act,0)
+	GUICtrlSetState($trnz,$GUI_DISABLE)
+
+	GUICtrlSetPos($trnz,$tz[0]-8,$tz[1]-8,$tz[2]+16,$tz[3]+16)
+
+	local $res[]=[ $left+($width)+32, $act, $trnz ]
+	return $res
+
+EndFunc
+
 Func Prompt($txt,$top,$A)
 
 	local $aW = 300
-	Local $height = 1.5*$fontsize;
+	Local $height = 1.6*$fontsize
 
 	local $trnz = PutPNG($dialog_bgr,-$pa_width,0,0,0)
 
-	if $top==0 then $top = $pa_height - ($A * $height*2);
+	if $top==0 then $top = $pa_height - ($A * $height*2)
 
 	local $tz = [ $pa_width/2-$aW/2, $top, $aW, $height ]
 	Local $act = GUICtrlcreateLabel($txt, $tz[0],$tz[1],$tz[2],$tz[3], $SS_CENTER)
@@ -189,7 +239,6 @@ Func Prompt($txt,$top,$A)
 	GUICtrlSetCursor($act,0)
 	GUICtrlSetState($trnz,$GUI_DISABLE)
 
-	;local $tz = ControlGetPos($igf_pa,'',$act);
 	GUICtrlSetPos($trnz,$tz[0]-16,$tz[1]-6,$tz[2]+32,$tz[3]+12)
 
 	local $res[]=[ $top+($height*2), $act, $trnz ]
@@ -214,7 +263,6 @@ Func Text($top,$txt,$goto="")
 	GUICtrlSetState($trnz,$GUI_DISABLE)
 
 	local $height = Round( Ceiling(StringLen($txt)/114) * (1.6*$fontsize) )
-	;ConsoleWrite($height&@CRLF)
 	local $tpos[] = [ 32,$pa_height-($height+$top)-38,$pa_width-66,$height ]
 	local $t = GUICtrlCreateLabel($txt,$tpos[0],$tpos[1],$tpos[2],$tpos[3])
 	GUICtrlSetColor($t,'0x'&$pa_color)
@@ -235,7 +283,7 @@ Func Text($top,$txt,$goto="")
 		Endif
 	WEnd
 
-	return $tpos;
+	return $tpos
 
 EndFunc
 
@@ -310,10 +358,11 @@ Func RunOnce()
 EndFunc
 
 Func ReadConf()
-	local $conf = IniReadSection($igf_ini,"config");
+	local $conf = IniReadSection($igf_ini,"config")
 	For $i = 1 To Ubound($conf)-1
 		if $conf[$i][0] == 'width' Then $pa_width=$conf[$i][1]
 		if $conf[$i][0] == 'height' Then $pa_height=$conf[$i][1]
+		if $conf[$i][0] == 'vidheight' Then $pa_vidheight=$conf[$i][1]
 		if $conf[$i][0] == 'title' Then $pa_title=$conf[$i][1]
 		if $conf[$i][0] == 'bgcolor' Then $pa_bgcolor = $conf[$i][1]
 		if $conf[$i][0] == 'color' Then $pa_color = $conf[$i][1]
@@ -341,7 +390,7 @@ Func Package_Browse($folder)
 EndFunc
 
 Func IGF_Init($ini)
-	local $conf = IniReadSection($ini,"config");
+	local $conf = IniReadSection($ini,"config")
 	For $i = 1 To Ubound($conf)-1
 		if $conf[$i][0] == 'bgcolor' Then $win_bgrcolor=$conf[$i][1]
 		if $conf[$i][0] == 'dialogbgr' Then $dialog_bgr=$conf[$i][1]
@@ -350,7 +399,7 @@ Func IGF_Init($ini)
 EndFunc
 
 Func IGF_Win()
-	$igf_win = GUICreate("Interactive Graphical Fictions", $win_width,$win_height,0,0,$WS_SYSMENU+$WS_MAXIMIZE+$WS_MINIMIZEBOX)
+	$igf_win = GUICreate("IgFE", $win_width,$win_height,0,0,$WS_SYSMENU+$WS_MAXIMIZE+$WS_MINIMIZEBOX)
 	GUISetBkColor("0x"&$win_bgrcolor,$igf_win)
 	GUISetState(@SW_SHOW,$igf_win)
 
@@ -411,22 +460,22 @@ EndFunc
 
 Func IGF_Exit($w = "")
 	if ($w=="") AND (Ubound($data_tosav)>0) Then
-	  Switch MsgBox($MB_YESNO + $MB_TASKMODAL, 'Quit from Interactive Grapical Fictions', 'Are you sure?')
-		 Case $IDYES
+		Switch MsgBox($MB_YESNO + $MB_TASKMODAL, 'Quit from Interactive Grapical Fictions', 'Are you sure?')
+			Case $IDYES
 			GUIDelete($igf_win)
 			Exit
-		 Case $IDNO
-			   return ''
-		 EndSwitch
+			Case $IDNO
+				return ''
+			EndSwitch
 	Else
-	  GUIDelete($igf_win)
-	  Exit
+		GUIDelete($igf_win)
+		Exit
 	Endif
 
 EndFunc
 
 Func IGF_PlayArea()
-	local $cz = WinGetClientSize("Interactive Graphical Fictions");
+	local $cz = WinGetClientSize("IgFE")
 	$igf_pa = GUICreate("", $pa_width, $pa_height, ($cz[0]/2-($pa_width/2)) , ($cz[1]/4-($pa_height/4)), $WS_POPUP, $WS_EX_MDICHILD, $igf_win)
 	GUISetFont($fontsize,0,0,$fontname,$igf_pa,5)
 	GUISetBkColor("0x"&$pa_bgcolor,$igf_pa)
@@ -452,7 +501,6 @@ Func IGF_SavLoad()
 	local $section
 	$save_file = FileOpenDialog($pa_title & " Saved Files",$igf_saved,"All (*."&$keyword&".ini)", $FD_FILEMUSTEXIST)
 	If @error Then
-		;msgbox(0,'',@error)
 		return ""
 	Else
 		$saved_data = IGF_SavRead($save_file)
@@ -467,14 +515,3 @@ Func IGF_SavRead($sfn)
 	return IniReadSection($sfn,"data")
 EndFunc
 
-Func IGF_ReadMe()
-	Local $file = FileOpen("readme.txt")
-	local $txt = FileRead($file)
-	FileClose($file)
-	msgbox(0,'readme',$txt)
-EndFunc
-
-Func IGF_About()
-   ConsoleWrite('tada')
-	msgbox(0,'Credits',"Engine:"&@CRLF&@CRLF&"https://github.com/actiopossesivo/igfiction",15)
-EndFunc
