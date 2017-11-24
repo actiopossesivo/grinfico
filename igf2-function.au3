@@ -31,7 +31,7 @@ Global $fontsize = 11
 Global $keyword = ""
 
 Global $win_bgrcolor = "111111"
-Global $dialog_bgr = @ScriptDir&"/prop/dark-tr.png"
+Global $dialog_bgr = @ScriptDir&"\prop\dark-tr.png"
 Global $igf_folder = @MyDocumentsDir&"\igfiction\pack"
 Global $igf_saved = @MyDocumentsDir&"\igfiction\saved"
 
@@ -43,6 +43,7 @@ Global $igf_pa
 Global $menu
 Global $scene
 Global $step = 0
+Global $scores
 Global $score = 0
 Global $been[0]
 
@@ -66,7 +67,7 @@ Func ReadSection($section,$saved_data)
 
 	ReDim $data_tosav[0][2]
 
-	_ArrayAdd($been,$section)
+
 
 	GUICtrlSetState($menu[8][0],$GUI_ENABLE)
 
@@ -80,13 +81,27 @@ Func ReadSection($section,$saved_data)
 					GUICtrlSetImage($scene,$opt[$i][1])
 				Endif
 			Case "score"
-				; beenhere?
 				local $aBeen = _ArrayUnique($been);
 				local $pass= 0
-				for $i = 0 to Ubound( $aBeen )-1
-				   if $aBeen[$i] == $section Then $pass=1
+				for $o = 0 to Ubound( $aBeen )-1
+				   if $aBeen[$o] == $section Then $pass=1
 				Next
-				if $pass=0 Then $score = $score + $opt[$i][1]
+				if $pass=0 Then
+					_ArrayAdd($been,$section)
+					$score = $score + $opt[$i][1]
+					if $scores = 0 Then
+						$scores = GUICtrlCreateLabel("Score: "&$score,4,4,$pa_width-8,1.6*$fontsize);
+						GUICtrlSetBkColor($scores,$GUI_BKCOLOR_TRANSPARENT)
+						GUICtrlSetColor($scores,0xFFFF00)
+						GUICtrlSetFont($scores,10,700)
+						GUICtrlSetState($scores,$GUI_ONTOP)
+					Else
+						ConsoleWrite("pakai"&@CRLF)
+						GUICtrlSetData($scores,"Score: "&$score)
+						GUICtrlSetState($scores,$GUI_ONTOP)
+					Endif
+				Endif
+
 			Case "next"
 				$n = $current + 1
 				$next_page = $Sections[$n]
@@ -466,7 +481,7 @@ Func IGF_PakOpen()
 Func IGF_PakClose()
 	GUICtrlSetData($menu[5][0],'Story:')
 	GUIDelete($igf_pa)
-	$playarea = IGF_PlayArea()
+	IGF_PlayArea()
 EndFunc
 
 Func IGF_Loadfile($file)
@@ -503,11 +518,20 @@ EndFunc
 
 Func IGF_PlayArea()
 	local $cz = WinGetClientSize("IgFE")
+
 	$igf_pa = GUICreate("", $pa_width, $pa_height, ($cz[0]/2-($pa_width/2)) , ($cz[1]/4-($pa_height/4)), $WS_POPUP, $WS_EX_MDICHILD, $igf_win)
 	GUISetFont($fontsize,0,0,$fontname,$igf_pa,5)
 	GUISetBkColor("0x"&$pa_bgcolor,$igf_pa)
 	$scene = GUICtrlCreatePic($pa_bgimage,0,0,$pa_width,$pa_height)
 	GUICtrlSetState($scene,$GUI_DISABLE)
+
+	;local $trnz = PutPNG(@ScriptDir&"\prop\gray-tr.png",0,0,$pa_width,(1.6*$fontsize)+8)
+	$scores = GUICtrlCreateLabel("Score",4,4,$pa_width-8,1.6*$fontsize);
+	GUICtrlSetBkColor($scores,$GUI_BKCOLOR_TRANSPARENT)
+	GUICtrlSetColor($scores,0xFFFF00)
+	GUICtrlSetFont($scores,10,700)
+	GUICtrlSetState($scores,$GUI_ONTOP)
+
 	GUISetState(@SW_SHOW,$igf_pa)
 	return $igf_pa
 EndFunc
