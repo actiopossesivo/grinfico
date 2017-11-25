@@ -73,8 +73,8 @@ Func Texting($TXT,$goto)
 EndFunc
 
 Func calc_height($fz,$md,$txt='')
-	local $n = Ceiling( (StringLen($txt) * ( $fz[0]*.6)) / $md[2] )
-	if $n < 1 Then $n=1
+	local $n = (Ceiling(StringLen($txt) * $fz[0] *.75)) / $md[2]
+	if $n < 2 Then $n=2
 	local $height = $n * $fz[1]
 	return $height
 EndFunc

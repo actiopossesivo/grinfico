@@ -26,8 +26,8 @@ Global $pa_title = "Untitled"
 Global $pa_bgcolor = "333333"
 Global $pa_color = "ffffff"
 Global $pa_bgimage
-Global $G_fontname = ""
-Global $G_fontsize = 12
+Global $G_fontname = "Tahoma"
+Global $G_fontsize = 11
 Global $keyword = ""
 
 Global $win_bgrcolor = "030003"
