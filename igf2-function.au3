@@ -26,11 +26,11 @@ Global $pa_title = "Untitled"
 Global $pa_bgcolor = "333333"
 Global $pa_color = "ffffff"
 Global $pa_bgimage
-Global $fontname = ""
-Global $fontsize = 12
+Global $G_fontname = ""
+Global $G_fontsize = 12
 Global $keyword = ""
 
-Global $win_bgrcolor = "111111"
+Global $win_bgrcolor = "030003"
 Global $dialog_bgr = @ScriptDir&"\prop\dark-tr.png"
 Global $igf_folder = @MyDocumentsDir&"\igfiction\pack"
 Global $igf_saved = @MyDocumentsDir&"\igfiction\saved"
@@ -46,9 +46,9 @@ Global $scores
 Global $score = 0
 Global $been[0]
 
-Global $ca[0]
-Global $ct[0]
-Global $trna[0]
+;Global $ca[0]
+;Global $ct[0]
+;Global $holders[0]
 
 Func ReadSection($section,$saved_data)
 
@@ -66,7 +66,7 @@ Func ReadSection($section,$saved_data)
 
 	ReDim $data_tosav[0][2]
 
-	GUICtrlSetState($menu[8][0],$GUI_ENABLE)
+	GUICtrlSetState($igf_menu[8][0],$GUI_ENABLE)
 
 	for $i = 0 to Ubound($opt)-1
 		Switch StringLower($opt[$i][0])
@@ -81,16 +81,16 @@ Func ReadSection($section,$saved_data)
 				local $aBeen = _ArrayUnique($been);
 				local $pass= 0
 				for $o = 0 to Ubound( $aBeen )-1
-				   if $aBeen[$o] == $section Then $pass=1
+					if $aBeen[$o] == $section Then $pass=1
 				Next
 				if $pass=0 Then
 					_ArrayAdd($been,$section)
 					$score = $score + $opt[$i][1]
 					if $scores = 0 Then
-						$scores = GUICtrlCreateLabel("Score: "&$score,4,4,$pa_width-8,1.6*$fontsize);
+						$scores = GUICtrlCreateLabel("Score: "&$score,4,4,$pa_width-8,1.6*$G_fontsize);
 						GUICtrlSetBkColor($scores,$GUI_BKCOLOR_TRANSPARENT)
 						GUICtrlSetColor($scores,0xFFFF00)
-						GUICtrlSetFont($scores,10,700)
+						GUICtrlSetFont($scores,$G_fontsize,700)
 						GUICtrlSetState($scores,$GUI_ONTOP)
 					Else
 						;ConsoleWrite("pakai"&@CRLF)
@@ -128,8 +128,8 @@ Func ReadSection($section,$saved_data)
 	Next
 
 	if $current>=2 Then
-		GUICtrlSetState($menu[6][0],$GUI_ENABLE)
-		GUICtrlSetState($menu[7][0],$GUI_ENABLE)
+		GUICtrlSetState($igf_menu[6][0],$GUI_ENABLE)
+		GUICtrlSetState($igf_menu[7][0],$GUI_ENABLE)
 
 		_ArrayAdd($data_tosav,"keyword"&"|"&$keyword)
 		_ArrayAdd($data_tosav,"section"&"|"&$section)
@@ -184,8 +184,8 @@ EndFunc
 Func Prompting($button, $spot, $vbutton)
 	local $top = 0
 	local $left = 0
-	ReDim $ca[0]
-	ReDim $trna[0]
+	local $ca[0]
+	local $holders[0]
 	local $B = Ubound($button)
 	local $S = Ubound($spot)
 	local $V = Ubound($vbutton)
@@ -196,7 +196,7 @@ Func Prompting($button, $spot, $vbutton)
 		$top = $res[0]
 		_ArrayAdd($ca,$res[1])
 		_ArrayAdd($goto,$button[$i][0])
-		_ArrayAdd($trna,$res[2])
+		_ArrayAdd($holders,$res[2])
 	Next
 
 	for $i = 0 to $V-1
@@ -204,7 +204,7 @@ Func Prompting($button, $spot, $vbutton)
 		$left= $res[0]
 		_ArrayAdd($ca,$res[1])
 		_ArrayAdd($goto,$vbutton[$i][0])
-		_ArrayAdd($trna,$res[2])
+		_ArrayAdd($holders,$res[2])
 	Next
 
 	for $i = 0 to $S-1
@@ -216,14 +216,13 @@ Func Prompting($button, $spot, $vbutton)
 		_ArrayAdd($goto,$spot[$i][0])
 	Next
 
-
 	While 1
 		local $click = GUIGetMsg(1)
 		if $click[1] == $igf_pa Then
 			for $i = 0 to Ubound($ca)-1
 				if $click[0]==$ca[$i] Then
 					ClearingGUICtrl($ca)
-					ClearingGUICtrl($trna)
+					ClearingGUICtrl($holders)
 					ReadSection($goto[$i],$saved_data)
 				Endif
 			next
@@ -237,171 +236,83 @@ EndFunc
 
 Func vPrompt($txt,$left,$V)
 
-	Local $width = 120
-	Local $height = 1.6*$fontsize
-	local $top = $pa_height - ($height*2)
+	local $tpos = Get_Dimensions(false,"inside")
+	local $fz	= Get_Dimensions(false,"size")
+	Local $width = 150
+	Local $height = $fz[1]
+	local $top = $tpos[1] - $height
+	if $left==0 then $left = $tpos[2]/2 - (($width*$V)/2)
+	if $left < 0 then $left = $tpos[0]
 
-	local $trnz = PutPNG($dialog_bgr,-$pa_width,0,0,0)
-	if $left==0 then $left = $pa_width/2 - ((($width+32)*$V)/2)
-	if $left < 0 then $left = $pa_width*.05
+	local $bubble = PutPNG($dialog_bgr,-$pa_width,0,0,0)
 
 	local $tz = [ $left, $top, $width, $height ]
-	Local $act = GUICtrlcreateLabel($txt, $tz[0],$tz[1],$tz[2],$tz[3], $SS_CENTER)
-	GUICtrlSetColor($act,'0x'&$pa_color)
-	GUICtrlSetFont($act,$fontsize,700)
+	Local $btn = GUICtrlcreateLabel($txt, $tz[0],$tz[1],$tz[2],$tz[3], $SS_CENTER)
+	GUICtrlSetColor($btn,'0x'&$pa_color)
+	GUICtrlSetFont($btn,$G_fontsize,700)
+	GUICtrlSetBkColor($btn,$GUI_BKCOLOR_TRANSPARENT)
+	GuiCtrlSetState($btn, $GUI_ONTOP)
+	GUICtrlSetCursor($btn,0)
 
-	GUICtrlSetBkColor($act,$GUI_BKCOLOR_TRANSPARENT)
-	GuiCtrlSetState($act, $GUI_ONTOP)
-	GUICtrlSetCursor($act,0)
-	GUICtrlSetState($trnz,$GUI_DISABLE)
+	GUICtrlSetPos($bubble,$tz[0]-$fz[3],$tz[1]-$fz[3],$tz[2]+$fz[2],$tz[3]+$fz[2])
+	GUICtrlSetState($bubble,$GUI_DISABLE)
 
-	GUICtrlSetPos($trnz,$tz[0]-8,$tz[1]-8,$tz[2]+16,$tz[3]+16)
-
-	local $res[]=[ $left+($width)+32, $act, $trnz ]
+	local $res[]=[ $left+($width)+$fz[1], $btn, $bubble ]
 	return $res
 
 EndFunc
 
 Func Prompt($txt,$top,$A)
 
-	local $aW = 300
-	Local $height = 1.6*$fontsize
+	local $tpos = Get_Dimensions(false,"inside")
+	local $fz	= Get_Dimensions(false,"size")
 
-	local $trnz = PutPNG($dialog_bgr,-$pa_width,0,0,0)
+	local $width = Ceiling($tpos[2]/3)
+	Local $height = $tpos[3]
+	local $left = ($tpos[2]/2)-($width/2)
+	local $bubble = PutPNG($dialog_bgr,-$pa_width,0,0,0)
 
-	if $top==0 then $top = $pa_height - ($A * $height*2)
+	if $top==0 then $top = ($tpos[1]*.75) - ($A*($height*1.5))
 
-	local $tz = [ $pa_width/2-$aW/2, $top, $aW, $height ]
+	local $tz = [ $left, $top, $width, $height ]
 	Local $act = GUICtrlcreateLabel($txt, $tz[0],$tz[1],$tz[2],$tz[3], $SS_CENTER)
 	GUICtrlSetColor($act,'0x'&$pa_color)
-	GUICtrlSetFont($act,$fontsize,700)
+	GUICtrlSetFont($act,$G_fontsize,700)
 
 	GUICtrlSetBkColor($act,$GUI_BKCOLOR_TRANSPARENT)
 	GuiCtrlSetState($act, $GUI_ONTOP)
 	GUICtrlSetCursor($act,0)
-	GUICtrlSetState($trnz,$GUI_DISABLE)
+	GUICtrlSetState($bubble,$GUI_DISABLE)
 
-	GUICtrlSetPos($trnz,$tz[0]-16,$tz[1]-6,$tz[2]+32,$tz[3]+12)
+	GUICtrlSetPos($bubble,$tz[0]-$fz[3],$tz[1]-$fz[3],$tz[2]+$fz[3],$tz[3]+$fz[3])
 
-	local $res[]=[ $top+($height*2), $act, $trnz ]
+	local $res[]=[ $top+($height*1.5), $act, $bubble ]
 	return $res
 
 EndFunc
 
-Func Texting($TXT,$goto)
-
-	local $goto_confirm = ''
-
-	for $i = 0 to UBound($TXT)-1
-		if $i == UBound($TXT)-1 Then $goto_confirm = $goto
-		Text(0,$TXT[$i],$goto_confirm)
-	Next
-
-EndFunc
-
-Func calc_height($fz,$md,$txt='')
-	local $n = Ceiling( (StringLen($txt) * ( $fz[0]*.6)) / $md[2] )
-	if $n < 1 Then $n=1
-	local $height = $n * $fz[1]
-	return $height
-EndFunc
-
-Func Textis($txt)
-	local $aText = _StringExplode($txt,"::")
-	if Ubound($aText)>1 Then
-		$aText[0] = StringRegExpReplace ( $aText[0], "\s+$", "")
-		$aText[1] = StringRegExpReplace ( $aText[1], "^\s+", "")
-		return $aText
-	Else
-		return $txt
-	EndIf
-EndFunc
-
-Func Text($top,$txt,$goto="")
-
-	ReDim $ct[0] ; Well?
-	Local $add = 0
-
-	local $trnz = PutPNG($dialog_bgr,-$pa_width,0,0,0)
-	GUICtrlSetState($trnz,$GUI_DISABLE)
-
-	local $tpos = Get_Dimensions(false,"inside",$fontsize,$pa_width,$pa_height)
-	local $bpos = Get_Dimensions(false,"frame",$fontsize,$pa_width,$pa_height)
-	local $fz   = Get_Dimensions(false,"size",$fontsize,$pa_width,$pa_height)
-
-	local $aTxt = Textis($txt);
-	local $height = calc_height($fz,$tpos,$aTxt)
-	local $vdispose[0]
-
-	;msgbox(0,'',$height)
-
-	if IsArray($aTxt) Then
-		$add = $fz[1]
-		local $pt = GUICtrlCreateLabel($aTxt[0],$tpos[0],$tpos[1]-$height-$add,$tpos[2],$add )
-		GUICtrlSetColor($pt,0xFFFF00)
-		GUICtrlSetFont($pt,$fz[0]-1,700)
-		GUICtrlSetBkColor($pt,$GUI_BKCOLOR_TRANSPARENT )
-		local $t = GUICtrlCreateLabel($aTxt[1],$tpos[0],$tpos[1]-$height,$tpos[2],$height )
-		_ArrayAdd($vdispose,$pt)
-		_ArrayAdd($vdispose,$t)
-	Else
-		local $t = GUICtrlCreateLabel($aTxt,$tpos[0],$tpos[1]-$height,$tpos[2],$height )
-		_ArrayAdd($vdispose,$t)
-	Endif
-
-	GUICtrlSetColor($t,'0x'&$pa_color)
-	GUICtrlSetCursor($t,0)
-	GUICtrlSetBkColor($t,$GUI_BKCOLOR_TRANSPARENT)
-	GuiCtrlSetState($t, $GUI_ONTOP)
-
-	;_ArrayDisplay($tpos)
-
-	GUICtrlSetPos($trnz, $bpos[0], $bpos[1] - $height - $add-$fz[2], $bpos[2], $height+$add+$fz[2] )
-	_ArrayAdd($vdispose,$trnz)
-
-	While 1
-		local $click = GUIGetMsg(1)
-		if $click[1] == $igf_pa Then
-			local $res = Text_GM($click[0],$t,$vdispose,$goto)
-			if $res==1 Then ExitLoop
-		Elseif $click[1] == $igf_win Then
-			if $click[0] == $GUI_EVENT_CLOSE Then Call("IGF_Exit")
-			Menu_GM($click[0])
-		Endif
-	WEnd
-
-EndFunc
-
-Func Text_GM($click,$t,$vdispose,$goto="")
-	if $click == $t Then
-		ClearingGUICtrl($vdispose)
-		if $goto<>'' Then ReadSection($goto,$saved_data)
-		return 1
-	Endif
-EndFunc
-
 Func Menu_GM($click)
-	For $i = 0 to Ubound($menu)-1
-	if $click == $menu[$i][0] Then Call($menu[$i][1],$menu[$i][2])
+	For $i = 0 to Ubound($igf_menu)-1
+	if $click == $igf_menu[$i][0] Then Call($igf_menu[$i][1],$igf_menu[$i][2])
 	Next
 EndFunc
 
 Func Welcome($wait=3)
 	local $width = $pa_width/2
 	local $height = $pa_height/2
-	local $trnz
+	local $bubble
 	local $wimg
 	if $pa_bgimage<> "" Then
 		$wimg = GUICtrlCreatePic($pa_bgimage,0,0,$pa_width,$pa_height)
-		$trnz = PutPNG(@ScriptDir&"/prop/gray-tr.png",0,0,$pa_width,$pa_height)
+		$bubble = PutPNG(@ScriptDir&"/prop/gray-tr.png",0,0,$pa_width,$pa_height)
 	Endif
-	GUICtrlSetData($menu[5][0],'Story: "'&$pa_title&'"')
+	GUICtrlSetData($igf_menu[5][0],'Story: "'&$pa_title&'"')
 	local $title = GUICtrlCreateLabel($pa_title,$pa_width/2-$width/2,$pa_height/2-($pa_height*.1),$width,$height,$SS_CENTER)
 	GUICtrlSetColor(-1,0xFFFFFF)
-	GUICtrlSetFont(-1,$fontsize*3,700)
+	GUICtrlSetFont(-1,$G_fontsize*3,700)
 	GUICtrlSetBkColor(-1,$GUI_BKCOLOR_TRANSPARENT)
 	Sleep($wait*1000)
-	GUICtrlDelete($trnz)
+	GUICtrlDelete($bubble)
 	GUICtrlDelete($wimg)
 	GUICtrlDelete($title)
  EndFunc
@@ -435,8 +346,8 @@ Func ReadConf()
 		if $conf[$i][0] == 'bgcolor' Then $pa_bgcolor = $conf[$i][1]
 		if $conf[$i][0] == 'color' Then $pa_color = $conf[$i][1]
 		if $conf[$i][0] == 'bgimage' Then $pa_bgimage = $conf[$i][1]
-		if $conf[$i][0] == 'fontname' Then $fontname=$conf[$i][1]
-		if $conf[$i][0] == 'fontsize' Then $fontsize=$conf[$i][1]
+		if $conf[$i][0] == 'fontname' Then $G_fontname=$conf[$i][1]
+		if $conf[$i][0] == 'fontsize' Then $G_fontsize=$conf[$i][1]
 		if $conf[$i][0] == 'keyword' Then $keyword=$conf[$i][1]
 		if $keyword=="" Then $keyword = StringRegExpReplace ( StringLower($pa_title), "[\s|\W]", "")
 	Next
@@ -452,7 +363,7 @@ Func Package_Browse($folder)
 		$sFileOpenDialog = StringReplace($sFileOpenDialog, "|", @CRLF)
 	EndIf
 
-	_ArrayAdd( $menu, GUICtrlCreateMenuItem($sFileOpenDialog,$menu[3][0]) &"|"& "IGF_Loadfile"&"|"&$sFileOpenDialog,0,"|")
+	_ArrayAdd( $igf_menu, GUICtrlCreateMenuItem($sFileOpenDialog,$igf_menu[3][0]) &"|"& "IGF_Loadfile"&"|"&$sFileOpenDialog,0,"|")
 
 	return $sFileOpenDialog
 EndFunc
@@ -474,7 +385,7 @@ Func IGF_Win()
 	local $mf = GUICtrlCreateMenu("&File")
 	local $ms = GUICtrlCreateMenu('&Story')
 
-	local $menu[][]= [ _
+	local $igf_menu[][]= [ _
 	[ $mf, "" ], _
 	[ GUICtrlCreateMenuItem("&Open",$mf), "IGF_PakOpen","" ], _
 	[ GUICtrlCreateMenuItem("&Close",$mf), "IGF_PakClose","" ], _
@@ -491,13 +402,13 @@ Func IGF_Win()
 	GUICtrlCreateMenuItem("",$mf,3)
 	GUICtrlCreateMenuItem("",$ms,2)
 
-	GUICtrlSetState($menu[6][0],$GUI_DISABLE)
-	GUICtrlSetState($menu[7][0],$GUI_DISABLE)
-	GUICtrlSetState($menu[8][0],$GUI_DISABLE)
-	GUICtrlSetState($menu[9][0],$GUI_DISABLE)
-	GUICtrlSetState($menu[2][0],$GUI_DISABLE)
+	GUICtrlSetState($igf_menu[6][0],$GUI_DISABLE)
+	GUICtrlSetState($igf_menu[7][0],$GUI_DISABLE)
+	GUICtrlSetState($igf_menu[8][0],$GUI_DISABLE)
+	GUICtrlSetState($igf_menu[9][0],$GUI_DISABLE)
+	GUICtrlSetState($igf_menu[2][0],$GUI_DISABLE)
 
-	return $menu
+	return $igf_menu
 
 EndFunc
 
@@ -507,7 +418,7 @@ Func IGF_PakOpen()
  EndFunc
 
 Func IGF_PakClose()
-	GUICtrlSetData($menu[5][0],'Story:')
+	GUICtrlSetData($igf_menu[5][0],'Story:')
 	GUIDelete($igf_pa)
 	IGF_PlayArea()
 EndFunc
@@ -530,7 +441,7 @@ Func IGF_Start($section,$saved_data)
 ;	FileChangeDir(@Scriptdir&"/play")
 	ReadConf()
 	if $section=='begin' Then Welcome(2)
-	GUICtrlSetState($menu[2][0],$GUI_ENABLE)
+	GUICtrlSetState($igf_menu[2][0],$GUI_ENABLE)
 	ReadSection($section,$saved_data)
 EndFunc
 
@@ -551,11 +462,12 @@ Func IGF_Exit($w = "")
 EndFunc
 
 Func IGF_PlayArea()
-	local $cz = WinGetClientSize("IgFE")
-
-	$igf_pa = GUICreate("", $pa_width, $pa_height, ($cz[0]/2-($pa_width/2)) , ($cz[1]/4-($pa_height/4)), $WS_CHILD,0, $igf_win)
-	GUISetFont($fontsize,0,0,$fontname,$igf_pa,5)
+	local $tpos = Get_Dimensions(false,"playarea")
+	; Playarea|283|124|800|480
+	$igf_pa = GUICreate("", $tpos[2], $tpos[3], $tpos[0] , $tpos[1], $WS_CHILD,0, $igf_win)
+	GUISetFont($G_fontsize,0,0,$G_fontname,$igf_pa,5)
 	GUISetBkColor("0x"&$pa_bgcolor,$igf_pa)
+
 	$scene = GUICtrlCreatePic($pa_bgimage,0,0,$pa_width,$pa_height)
 	GUICtrlSetState($scene,$GUI_DISABLE)
 	GUISetState(@SW_SHOW,$igf_pa)
@@ -563,13 +475,15 @@ Func IGF_PlayArea()
 EndFunc
 
 Func IGF_ScoreBar()
-	local $cz = WinGetClientSize("IgFE")
-	$igf_sb = GUICreate("", $pa_width, (1.6*$fontsize)+8, ($cz[0]/2-($pa_width/2)) , ($cz[1]/4-($pa_height/4))-((1.6*$fontsize)+8)-4 , $WS_CHILD, 0, $igf_win)
-	$scores = GUICtrlCreateLabel("Score",4,4,$pa_width-8,1.6*$fontsize);
-	GUISetBkColor(0x111111,$igf_sb)
+	local $tpos = Get_Dimensions(false,"playarea")
+	local $fz = Get_Dimensions(false,"size")
+	;Size|12|24|18|9
+	$igf_sb = GUICreate("", $tpos[2], $fz[1]+ $fz[2], $tpos[0] , $tpos[1]-($fz[1]+$fz[2]+4), $WS_CHILD, 0, $igf_win)
+	$scores = GUICtrlCreateLabel("Score",$fz[3],$fz[3]+.5*$fz[3],$tpos[2]-$fz[3],$fz[1]);
+	GUISetBkColor(0x220022,$igf_sb)
 	GUICtrlSetColor($scores,0xFFFFFF)
 	GUICtrlSetBkColor($scores,$GUI_BKCOLOR_TRANSPARENT)
-	GUICtrlSetFont($scores,10,700)
+	GUICtrlSetFont($scores,$fz[0],700)
 	GUICtrlSetState($scores,$GUI_ONTOP)
 	GUISetState(@SW_SHOW,$igf_sb)
 	return $igf_sb

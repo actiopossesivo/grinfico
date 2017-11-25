@@ -7,7 +7,7 @@ Opt('WINTITLEMATCHMODE', 4)
 
 RunOnce()
 
-Global $menu = IGF_Win()
+Global $igf_menu = IGF_Win()
 Global $igf_sb = IGF_ScoreBar()
 Global $igf_pa = IGF_PlayArea()
 local $top = 0
@@ -18,7 +18,7 @@ Global $data_tosav[0][2]
 ;C:\IGF\SRC\Scenario.ini
 
 if $CmdLine[0]>0 Then
-   IGF_DirectStart($CmdLine[1])
+	IGF_DirectStart($CmdLine[1])
 Endif
 
 While 1
