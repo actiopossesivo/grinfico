@@ -27,7 +27,7 @@ Global $pa_bgcolor = "333333"
 Global $pa_color = "ffffff"
 Global $pa_bgimage
 Global $fontname = ""
-Global $fontsize = 11
+Global $fontsize = 12
 Global $keyword = ""
 
 Global $win_bgrcolor = "111111"
@@ -39,8 +39,7 @@ Global $win_width = $tbpos[0]
 Global $win_height = $tbpos[1]
 
 Global $igf_win
-Global $igf_pa
-Global $menu
+
 Global $scene
 Global $step = 0
 Global $scores
@@ -66,8 +65,6 @@ Func ReadSection($section,$saved_data)
 	local $video
 
 	ReDim $data_tosav[0][2]
-
-
 
 	GUICtrlSetState($menu[8][0],$GUI_ENABLE)
 
@@ -96,7 +93,7 @@ Func ReadSection($section,$saved_data)
 						GUICtrlSetFont($scores,10,700)
 						GUICtrlSetState($scores,$GUI_ONTOP)
 					Else
-						ConsoleWrite("pakai"&@CRLF)
+						;ConsoleWrite("pakai"&@CRLF)
 						GUICtrlSetData($scores,"Score: "&$score)
 						GUICtrlSetState($scores,$GUI_ONTOP)
 					Endif
@@ -104,10 +101,14 @@ Func ReadSection($section,$saved_data)
 
 			Case "next"
 				$n = $current + 1
+				if $n>Ubound($Sections)-1 Then $n = 2
 				$next_page = $Sections[$n]
+				if $n == 2 Then msgbox(0,'',"The Story seem to be unfinished?")
 			Case "back"
 				$n = $current - 1
+				if $n<2 Then $n = 2
 				$next_page = $Sections[$n]
+				if $n == 2 Then msgbox(0,'',"The Story seem to be unfinished?")
 			Case "spot"
 				_ArrayAdd($gspot,$opt[$i][1],0,"|")
 			Case "button"
@@ -155,6 +156,7 @@ Func ReadSection($section,$saved_data)
 
 	if Ubound($gtext)>-1 Then Texting($gtext,$goto)
 
+	;if IsString($next_page) Then ReadSection($next_page,$saved_data)
 	if $next_page<>"" Then ReadSection($next_page,$saved_data)
 
 	if Ubound($gbutton)>-1 OR Ubound($gspot)>-1 OR Ubound($gvbutton)>-1 Then
@@ -297,27 +299,70 @@ Func Texting($TXT,$goto)
 
 EndFunc
 
+Func calc_height($fz,$md,$txt='')
+	local $n = Ceiling( (StringLen($txt) * ( $fz[0]*.6)) / $md[2] )
+	if $n < 1 Then $n=1
+	local $height = $n * $fz[1]
+	return $height
+EndFunc
+
+Func Textis($txt)
+	local $aText = _StringExplode($txt,"::")
+	if Ubound($aText)>1 Then
+		$aText[0] = StringRegExpReplace ( $aText[0], "\s+$", "")
+		$aText[1] = StringRegExpReplace ( $aText[1], "^\s+", "")
+		return $aText
+	Else
+		return $txt
+	EndIf
+EndFunc
+
 Func Text($top,$txt,$goto="")
 
 	ReDim $ct[0] ; Well?
+	Local $add = 0
 
 	local $trnz = PutPNG($dialog_bgr,-$pa_width,0,0,0)
 	GUICtrlSetState($trnz,$GUI_DISABLE)
 
-	local $height = Round( Ceiling(StringLen($txt)/114) * (1.6*$fontsize) )
-	local $tpos[] = [ 32,$pa_height-($height+$top)-38,$pa_width-66,$height ]
-	local $t = GUICtrlCreateLabel($txt,$tpos[0],$tpos[1],$tpos[2],$tpos[3])
+	local $tpos = Get_Dimensions(false,"inside",$fontsize,$pa_width,$pa_height)
+	local $bpos = Get_Dimensions(false,"frame",$fontsize,$pa_width,$pa_height)
+	local $fz   = Get_Dimensions(false,"size",$fontsize,$pa_width,$pa_height)
+
+	local $aTxt = Textis($txt);
+	local $height = calc_height($fz,$tpos,$aTxt)
+	local $vdispose[0]
+
+	;msgbox(0,'',$height)
+
+	if IsArray($aTxt) Then
+		$add = $fz[1]
+		local $pt = GUICtrlCreateLabel($aTxt[0],$tpos[0],$tpos[1]-$height-$add,$tpos[2],$add )
+		GUICtrlSetColor($pt,0xFFFF00)
+		GUICtrlSetFont($pt,$fz[0]-1,700)
+		GUICtrlSetBkColor($pt,$GUI_BKCOLOR_TRANSPARENT )
+		local $t = GUICtrlCreateLabel($aTxt[1],$tpos[0],$tpos[1]-$height,$tpos[2],$height )
+		_ArrayAdd($vdispose,$pt)
+		_ArrayAdd($vdispose,$t)
+	Else
+		local $t = GUICtrlCreateLabel($aTxt,$tpos[0],$tpos[1]-$height,$tpos[2],$height )
+		_ArrayAdd($vdispose,$t)
+	Endif
+
 	GUICtrlSetColor($t,'0x'&$pa_color)
 	GUICtrlSetCursor($t,0)
 	GUICtrlSetBkColor($t,$GUI_BKCOLOR_TRANSPARENT)
 	GuiCtrlSetState($t, $GUI_ONTOP)
 
-	GUICtrlSetPos($trnz,$tpos[0]-16,$tpos[1]-16,$tpos[2]+32,$tpos[3]+32)
+	;_ArrayDisplay($tpos)
+
+	GUICtrlSetPos($trnz, $bpos[0], $bpos[1] - $height - $add-$fz[2], $bpos[2], $height+$add+$fz[2] )
+	_ArrayAdd($vdispose,$trnz)
 
 	While 1
 		local $click = GUIGetMsg(1)
 		if $click[1] == $igf_pa Then
-			local $res = Text_GM($click[0],$t,$trnz,$goto)
+			local $res = Text_GM($click[0],$t,$vdispose,$goto)
 			if $res==1 Then ExitLoop
 		Elseif $click[1] == $igf_win Then
 			if $click[0] == $GUI_EVENT_CLOSE Then Call("IGF_Exit")
@@ -325,16 +370,13 @@ Func Text($top,$txt,$goto="")
 		Endif
 	WEnd
 
-	return $tpos
-
 EndFunc
 
-Func Text_GM($click,$t,$trnz,$goto="")
+Func Text_GM($click,$t,$vdispose,$goto="")
 	if $click == $t Then
-	GUICtrlDelete($t)
-	GUICtrlDelete($trnz)
-	if $goto<>'' Then ReadSection($goto,$saved_data)
-	return 1
+		ClearingGUICtrl($vdispose)
+		if $goto<>'' Then ReadSection($goto,$saved_data)
+		return 1
 	Endif
 EndFunc
 
@@ -343,22 +385,6 @@ Func Menu_GM($click)
 	if $click == $menu[$i][0] Then Call($menu[$i][1],$menu[$i][2])
 	Next
 EndFunc
-
-Func _DeskTopVisibleArea()
-	Local $aInfo[2]
-	Local $aCPos = ControlGetPos('[CLASS:Shell_TrayWnd]', '', '')
-	If IsArray($aCPos) <= 0 Then
-		$aInfo[0] = @DesktopWidth
-		$aInfo[1] = @DesktopHeight
-	ElseIf $aCPos[2] >= @DesktopWidth Then
-		$aInfo[0] = @DesktopWidth
-		$aInfo[1] = @DesktopHeight - ($aCPos[3] - $aCPos[1])
-	Else
-		$aInfo[0] = @DesktopWidth - ($aCPos[2] - $aCPos[0])
-		$aInfo[1] = @DesktopHeight
-	EndIf
-	Return $aInfo
- EndFunc
 
 Func Welcome($wait=3)
 	local $width = $pa_width/2
@@ -457,6 +483,7 @@ Func IGF_Win()
 	[ $ms, "" ], _
 	[ GUICtrlCreateMenuItem("&Load",$ms), "IGF_SavLoad","" ], _
 	[ GUICtrlCreateMenuItem("&Save",$ms), "IGF_SavSave","" ], _
+	[ GUICtrlCreateMenuItem("&Restart",$ms), "IGF_SavRestart","" ], _
 	[ GUICtrlCreateMenuItem("&ReadMe",$ms), "IGF_ReadMe","" ], _
 	[ GUICtrlCreateMenuItem("&About",-1), "IGF_About","" ] _
 	]
@@ -467,6 +494,7 @@ Func IGF_Win()
 	GUICtrlSetState($menu[6][0],$GUI_DISABLE)
 	GUICtrlSetState($menu[7][0],$GUI_DISABLE)
 	GUICtrlSetState($menu[8][0],$GUI_DISABLE)
+	GUICtrlSetState($menu[9][0],$GUI_DISABLE)
 	GUICtrlSetState($menu[2][0],$GUI_DISABLE)
 
 	return $menu
@@ -484,6 +512,12 @@ Func IGF_PakClose()
 	IGF_PlayArea()
 EndFunc
 
+Func IGF_DirectStart($file)
+	$igf_ini = $file
+	FileChangeDir(GetDir($file));
+	IGF_Start('begin',$saved_data)
+EndFunc
+
 Func IGF_Loadfile($file)
 	FileDelete(@Scriptdir&"/play/*.*")
 	FileChangeDir(@Scriptdir&"/play")
@@ -493,7 +527,7 @@ Func IGF_Loadfile($file)
 EndFunc
 
 Func IGF_Start($section,$saved_data)
-	FileChangeDir(@Scriptdir&"/play")
+;	FileChangeDir(@Scriptdir&"/play")
 	ReadConf()
 	if $section=='begin' Then Welcome(2)
 	GUICtrlSetState($menu[2][0],$GUI_ENABLE)
@@ -519,21 +553,26 @@ EndFunc
 Func IGF_PlayArea()
 	local $cz = WinGetClientSize("IgFE")
 
-	$igf_pa = GUICreate("", $pa_width, $pa_height, ($cz[0]/2-($pa_width/2)) , ($cz[1]/4-($pa_height/4)), $WS_POPUP, $WS_EX_MDICHILD, $igf_win)
+	$igf_pa = GUICreate("", $pa_width, $pa_height, ($cz[0]/2-($pa_width/2)) , ($cz[1]/4-($pa_height/4)), $WS_CHILD,0, $igf_win)
 	GUISetFont($fontsize,0,0,$fontname,$igf_pa,5)
 	GUISetBkColor("0x"&$pa_bgcolor,$igf_pa)
 	$scene = GUICtrlCreatePic($pa_bgimage,0,0,$pa_width,$pa_height)
 	GUICtrlSetState($scene,$GUI_DISABLE)
-
-	;local $trnz = PutPNG(@ScriptDir&"\prop\gray-tr.png",0,0,$pa_width,(1.6*$fontsize)+8)
-	$scores = GUICtrlCreateLabel("Score",4,4,$pa_width-8,1.6*$fontsize);
-	GUICtrlSetBkColor($scores,$GUI_BKCOLOR_TRANSPARENT)
-	GUICtrlSetColor($scores,0xFFFF00)
-	GUICtrlSetFont($scores,10,700)
-	GUICtrlSetState($scores,$GUI_ONTOP)
-
 	GUISetState(@SW_SHOW,$igf_pa)
 	return $igf_pa
+EndFunc
+
+Func IGF_ScoreBar()
+	local $cz = WinGetClientSize("IgFE")
+	$igf_sb = GUICreate("", $pa_width, (1.6*$fontsize)+8, ($cz[0]/2-($pa_width/2)) , ($cz[1]/4-($pa_height/4))-((1.6*$fontsize)+8)-4 , $WS_CHILD, 0, $igf_win)
+	$scores = GUICtrlCreateLabel("Score",4,4,$pa_width-8,1.6*$fontsize);
+	GUISetBkColor(0x111111,$igf_sb)
+	GUICtrlSetColor($scores,0xFFFFFF)
+	GUICtrlSetBkColor($scores,$GUI_BKCOLOR_TRANSPARENT)
+	GUICtrlSetFont($scores,10,700)
+	GUICtrlSetState($scores,$GUI_ONTOP)
+	GUISetState(@SW_SHOW,$igf_sb)
+	return $igf_sb
 EndFunc
 
 Func IGF_SavSave()
@@ -579,6 +618,8 @@ Func IGF_SavLoad()
 
 		; Jus like restart playarea
 
+		FileChangeDir(@Scriptdir&"/play")
+
 		GUIDelete($igf_pa)
 		IGF_PlayArea()
 		IGF_Start($section,$saved_data)
@@ -586,7 +627,51 @@ Func IGF_SavLoad()
 	Endif
 EndFunc
 
+Func IGF_SavRestart($file)
+	global $been[0]
+	GUIDelete($igf_pa)
+	IGF_PlayArea()
+	IGF_Start('begin',$saved_data)
+EndFunc
+
 Func IGF_SavRead($sfn)
 	return IniReadSection($sfn,"data")
 EndFunc
 
+
+Func GetDir($sFilePath)
+
+	Local $aFolders = StringSplit($sFilePath, "\")
+	Local $iArrayFoldersSize = UBound($aFolders)
+	Local $FileDir = ""
+
+	If (Not IsString($sFilePath)) Then
+		Return SetError(1, 0, -1)
+	EndIf
+
+	$aFolders = StringSplit($sFilePath, "\")
+	$iArrayFoldersSize = UBound($aFolders)
+
+	For $i = 1 To ($iArrayFoldersSize - 2)
+		$FileDir &= $aFolders[$i] & "\"
+	Next
+
+	Return $FileDir
+
+EndFunc	;==>GetDir
+
+Func _DeskTopVisibleArea()
+	Local $aInfo[2]
+	Local $aCPos = ControlGetPos('[CLASS:Shell_TrayWnd]', '', '')
+	If IsArray($aCPos) <= 0 Then
+		$aInfo[0] = @DesktopWidth
+		$aInfo[1] = @DesktopHeight
+	ElseIf $aCPos[2] >= @DesktopWidth Then
+		$aInfo[0] = @DesktopWidth
+		$aInfo[1] = @DesktopHeight - ($aCPos[3] - $aCPos[1])
+	Else
+		$aInfo[0] = @DesktopWidth - ($aCPos[2] - $aCPos[0])
+		$aInfo[1] = @DesktopHeight
+	EndIf
+	Return $aInfo
+EndFunc
