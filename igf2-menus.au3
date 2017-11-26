@@ -1,5 +1,7 @@
-Func vidplay($video,$left,$top,$width,$height)
-	$res = _wmpcreate(1, $left, $top, $width, $height)
+Func vidplay($video,$left=0,$top=0,$width=0,$height=0)
+	if $width == 0 Then $width = $pa_width
+	if $height == 0 Then $height = $pa_vidheight
+	local $res = _wmpcreate(1, $left, $top, $width, $height)
 	$ovid = $res[0]
 	$oovid = $res[1]
 	_wmpvalue($ovid, "nocontrols")
@@ -29,7 +31,7 @@ Func IGF_About()
 		"Wiki:"&@CRLF&"https://goo.gl/bQW68P"&@CRLF)
 EndFunc
 
-Func Get_Dimensions($debug=False,$keyword='')
+Func Get_Dimensions($debug=False,$G_keyword='')
 
 	if $G_fontsize>14 Then $G_fontsize=14
 	if $G_fontsize<8 Then $G_fontsize=8
@@ -49,8 +51,8 @@ Func Get_Dimensions($debug=False,$keyword='')
 	_ArrayAdd($wz, "Frame" &"|"& $fz[3] &"|"& $h-$fz[3] &"|"& $w-(2*$fz[3]) &"|"& $fz[1] )
 	_ArrayAdd($wz, "Inside" &"|"& $fz[2] &"|"& $h-$fz[2] &"|"& $w-(2*$fz[2]) &"|"& $fz[1] )
 
-	if $keyword<>"" Then
-		local $i = _ArraySearch($wz, StringLower($keyword))
+	if $G_keyword<>"" Then
+		local $i = _ArraySearch($wz, StringLower($G_keyword))
 		local $found[] = [ $wz[$i][1], $wz[$i][2], $wz[$i][3], $wz[$i][4] ]
 	Endif
 
@@ -73,8 +75,8 @@ Func Texting($TXT,$goto)
 EndFunc
 
 Func calc_height($fz,$md,$txt='')
-	local $n = (Ceiling(StringLen($txt) * $fz[0] *.75)) / $md[2]
-	if $n < 2 Then $n=2
+	local $n = Ceiling( (StringLen($txt) * $fz[0] *.65) / $md[2] )
+	if $n < 2 Then $n= 2
 	local $height = $n * $fz[1]
 	return $height
 EndFunc
@@ -144,7 +146,7 @@ EndFunc
 Func Text_GM($click,$t,$vdispose,$goto="")
 	if $click == $t Then
 		ClearingGUICtrl($vdispose)
-		if $goto<>'' Then ReadSection($goto,$saved_data)
+		if $goto<>'' Then ReadSection($goto,$G_saved)
 		return 1
 	Endif
 EndFunc

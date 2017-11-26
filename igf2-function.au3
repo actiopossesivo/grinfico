@@ -26,23 +26,24 @@ Global $pa_title = "Untitled"
 Global $pa_bgcolor = "333333"
 Global $pa_color = "ffffff"
 Global $pa_bgimage
+
 Global $G_fontname = "Tahoma"
 Global $G_fontsize = 11
-Global $keyword = ""
+Global $G_keyword = ""
 
 Global $win_bgrcolor = "030003"
-Global $dialog_bgr = @ScriptDir&"\prop\dark-tr.png"
 Global $igf_folder = @MyDocumentsDir&"\igfiction\pack"
 Global $igf_saved = @MyDocumentsDir&"\igfiction\saved"
 
+Global $dialog_bgr = @ScriptDir&"\prop\dark-tr.png"
 Global $win_width = $tbpos[0]
 Global $win_height = $tbpos[1]
 
 Global $igf_win
 
-Global $scene
+Global $iScene
 Global $step = 0
-Global $scores
+Global $iScores
 Global $score = 0
 Global $been[0]
 
@@ -50,33 +51,36 @@ Global $been[0]
 ;Global $ct[0]
 ;Global $holders[0]
 
-Func ReadSection($section,$saved_data)
+Func ReadSection($section,$G_saved)
 
 	local $opt = IniReadSection($igf_ini,$section)
 	local $Sections = IniReadSectionNames($igf_ini)
 	local $current = _ArraySearch($Sections,$section)
 	local $gtext[0]
 	local $gpng[0][5]
+	local $gvid[0|5]
+	local $gspot[0][5]
 	local $gbutton[0][2]
 	local $gvbutton[0][2]
-	local $gspot[0][5]
 	local $next_page ="", $goto = ""
 	local $n
-	local $video
 
-	ReDim $data_tosav[0][2]
+	ReDim $G_bucket[0][2]
 
-	GUICtrlSetState($igf_menu[8][0],$GUI_ENABLE)
+	GUICtrlSetState($igf_mn[7][0],$GUI_DISABLE)
 
 	for $i = 0 to Ubound($opt)-1
 		Switch StringLower($opt[$i][0])
+
 			Case "scene"
-				if $scene == 0 Then
-					$scene = GUICtrlCreatePic($opt[$i][1],0,0,$pa_width,$pa_height)
-					GUICtrlSetState($scene,$GUI_DISABLE)
+				if $iScene == 0 Then
+					$iScene = GUICtrlCreatePic($opt[$i][1],0,0,$pa_width,$pa_height)
+					GUICtrlSetState($iScene,$GUI_DISABLE)
 				Else
-					GUICtrlSetImage($scene,$opt[$i][1])
+					GUICtrlSetImage($iScene,$opt[$i][1])
 				Endif
+				GUICtrlSetState($igf_mn[7][0],$GUI_ENABLE)
+
 			Case "score"
 				local $aBeen = _ArrayUnique($been);
 				local $pass= 0
@@ -86,17 +90,8 @@ Func ReadSection($section,$saved_data)
 				if $pass=0 Then
 					_ArrayAdd($been,$section)
 					$score = $score + $opt[$i][1]
-					if $scores = 0 Then
-						$scores = GUICtrlCreateLabel("Score: "&$score,4,4,$pa_width-8,1.6*$G_fontsize);
-						GUICtrlSetBkColor($scores,$GUI_BKCOLOR_TRANSPARENT)
-						GUICtrlSetColor($scores,0xFFFF00)
-						GUICtrlSetFont($scores,$G_fontsize,700)
-						GUICtrlSetState($scores,$GUI_ONTOP)
-					Else
-						;ConsoleWrite("pakai"&@CRLF)
-						GUICtrlSetData($scores,"Score: "&$score)
-						GUICtrlSetState($scores,$GUI_ONTOP)
-					Endif
+					GUICtrlSetData($iScores,"Score: "&$score)
+					GUICtrlSetState($iScores,$GUI_ONTOP)
 				Endif
 
 			Case "next"
@@ -104,23 +99,31 @@ Func ReadSection($section,$saved_data)
 				if $n>Ubound($Sections)-1 Then $n = 2
 				$next_page = $Sections[$n]
 				if $n == 2 Then msgbox(0,'',"The Story seem to be unfinished?")
+
 			Case "back"
 				$n = $current - 1
 				if $n<2 Then $n = 2
 				$next_page = $Sections[$n]
 				if $n == 2 Then msgbox(0,'',"The Story seem to be unfinished?")
+
 			Case "spot"
 				_ArrayAdd($gspot,$opt[$i][1],0,"|")
+
 			Case "button"
 				_ArrayAdd($gbutton,$opt[$i][1],0,"|")
+
 			Case "vbutton"
 				_ArrayAdd($gvbutton,$opt[$i][1],0,"|")
+
 			Case "text"
 				_ArrayAdd($gtext,$opt[$i][1])
+
 			Case "png"
 				_ArrayAdd($gpng,$opt[$i][1],0,"|")
+
 			Case "vid"
-				$video = $opt[$i][1]
+				_ArrayAdd($gvid,$opt[$i][1],0,"|")
+				;$video = $opt[$i][1]
 			Case "goto"
 				$goto = $opt[$i][1]
 
@@ -128,43 +131,42 @@ Func ReadSection($section,$saved_data)
 	Next
 
 	if $current>=2 Then
-		GUICtrlSetState($igf_menu[6][0],$GUI_ENABLE)
-		GUICtrlSetState($igf_menu[7][0],$GUI_ENABLE)
-
-		_ArrayAdd($data_tosav,"keyword"&"|"&$keyword)
-		_ArrayAdd($data_tosav,"section"&"|"&$section)
-		_ArrayAdd($data_tosav,"step"&"|"&$step)
-		_ArrayAdd($data_tosav,"score"&"|"&$score)
+		; ini
+		GUICtrlSetState($igf_mn[8][0],$GUI_ENABLE)
+		_ArrayAdd($G_bucket,"keyword"&"|"&$G_keyword)
+		_ArrayAdd($G_bucket,"section"&"|"&$section)
+		_ArrayAdd($G_bucket,"step"&"|"&$step)
+		_ArrayAdd($G_bucket,"score"&"|"&$score)
 
 	Endif
 
-	if Ubound($png_obj)>-1 Then ClearingGUICtrl($png_obj)
+	if Ubound($G_obj)>-1 Then ClearingGUICtrl($G_obj)
 
-	if $video<>"" Then
-		$ovid = vidplay($video,0,0,$pa_width,$pa_vidheight)
+	if Ubound($gvid)>-1 Then
+		$ovid = vidplay($gvid[0][0],$gvid[0][1],$gvid[0][2],$gvid[0][3],$gvid[0][4])
 		GUICtrlSetState($ovid,$GUI_DISABLE)
-		_ArrayAdd($png_obj,$ovid)
+		_ArrayAdd($G_obj,$ovid)
 	Endif
 
 	if Ubound($gpng)>-1 Then
 		for $i = 0 to Ubound($gpng)-1
 			local $pngo = PutPNG($gpng[$i][0],$gpng[$i][1],$gpng[$i][2],$gpng[$i][3],$gpng[$i][4])
 			GUICtrlSetState($pngo,$GUI_DISABLE)
-			_ArrayAdd($png_obj,$pngo)
+			_ArrayAdd($G_obj,$pngo)
 		Next
 	Endif
 
 	if Ubound($gtext)>-1 Then Texting($gtext,$goto)
 
-	;if IsString($next_page) Then ReadSection($next_page,$saved_data)
-	if $next_page<>"" Then ReadSection($next_page,$saved_data)
+	;if IsString($next_page) Then ReadSection($next_page,$G_saved)
+	if $next_page<>"" Then ReadSection($next_page,$G_saved)
 
 	if Ubound($gbutton)>-1 OR Ubound($gspot)>-1 OR Ubound($gvbutton)>-1 Then
 		$step = $step +1
 		Prompting($gbutton,$gspot,$gvbutton)
 	EndIf
 
-	if $goto <> "" Then ReadSection($goto,$saved_data)
+	if $goto <> "" Then ReadSection($goto,$G_saved)
 
 EndFunc
 
@@ -223,7 +225,7 @@ Func Prompting($button, $spot, $vbutton)
 				if $click[0]==$ca[$i] Then
 					ClearingGUICtrl($ca)
 					ClearingGUICtrl($holders)
-					ReadSection($goto[$i],$saved_data)
+					ReadSection($goto[$i],$G_saved)
 				Endif
 			next
 		Elseif $click[1] == $igf_win Then
@@ -292,8 +294,8 @@ Func Prompt($txt,$top,$A)
 EndFunc
 
 Func Menu_GM($click)
-	For $i = 0 to Ubound($igf_menu)-1
-	if $click == $igf_menu[$i][0] Then Call($igf_menu[$i][1],$igf_menu[$i][2])
+	For $i = 0 to Ubound($igf_mn)-1
+	if $click == $igf_mn[$i][0] Then Call($igf_mn[$i][1],$igf_mn[$i][2])
 	Next
 EndFunc
 
@@ -306,7 +308,7 @@ Func Welcome($wait=3)
 		$wimg = GUICtrlCreatePic($pa_bgimage,0,0,$pa_width,$pa_height)
 		$bubble = PutPNG(@ScriptDir&"/prop/gray-tr.png",0,0,$pa_width,$pa_height)
 	Endif
-	GUICtrlSetData($igf_menu[5][0],'Story: "'&$pa_title&'"')
+	GUICtrlSetData($igf_mn[5][0],'Story: "'&$pa_title&'"')
 	local $title = GUICtrlCreateLabel($pa_title,$pa_width/2-$width/2,$pa_height/2-($pa_height*.1),$width,$height,$SS_CENTER)
 	GUICtrlSetColor(-1,0xFFFFFF)
 	GUICtrlSetFont(-1,$G_fontsize*3,700)
@@ -348,8 +350,8 @@ Func ReadConf()
 		if $conf[$i][0] == 'bgimage' Then $pa_bgimage = $conf[$i][1]
 		if $conf[$i][0] == 'fontname' Then $G_fontname=$conf[$i][1]
 		if $conf[$i][0] == 'fontsize' Then $G_fontsize=$conf[$i][1]
-		if $conf[$i][0] == 'keyword' Then $keyword=$conf[$i][1]
-		if $keyword=="" Then $keyword = StringRegExpReplace ( StringLower($pa_title), "[\s|\W]", "")
+		if $conf[$i][0] == 'keyword' Then $G_keyword=$conf[$i][1]
+		if $G_keyword=="" Then $G_keyword = StringRegExpReplace ( StringLower($pa_title), "[\s|\W]", "")
 	Next
 EndFunc
 
@@ -363,7 +365,7 @@ Func Package_Browse($folder)
 		$sFileOpenDialog = StringReplace($sFileOpenDialog, "|", @CRLF)
 	EndIf
 
-	_ArrayAdd( $igf_menu, GUICtrlCreateMenuItem($sFileOpenDialog,$igf_menu[3][0]) &"|"& "IGF_Loadfile"&"|"&$sFileOpenDialog,0,"|")
+	_ArrayAdd( $igf_mn, GUICtrlCreateMenuItem($sFileOpenDialog,$igf_mn[3][0]) &"|"& "IGF_Loadfile"&"|"&$sFileOpenDialog,0,"|")
 
 	return $sFileOpenDialog
 EndFunc
@@ -385,7 +387,7 @@ Func IGF_Win()
 	local $mf = GUICtrlCreateMenu("&File")
 	local $ms = GUICtrlCreateMenu('&Story')
 
-	local $igf_menu[][]= [ _
+	local $igf_mn[][]= [ _
 	[ $mf, "" ], _
 	[ GUICtrlCreateMenuItem("&Open",$mf), "IGF_PakOpen","" ], _
 	[ GUICtrlCreateMenuItem("&Close",$mf), "IGF_PakClose","" ], _
@@ -402,13 +404,27 @@ Func IGF_Win()
 	GUICtrlCreateMenuItem("",$mf,3)
 	GUICtrlCreateMenuItem("",$ms,2)
 
-	GUICtrlSetState($igf_menu[6][0],$GUI_DISABLE)
-	GUICtrlSetState($igf_menu[7][0],$GUI_DISABLE)
-	GUICtrlSetState($igf_menu[8][0],$GUI_DISABLE)
-	GUICtrlSetState($igf_menu[9][0],$GUI_DISABLE)
-	GUICtrlSetState($igf_menu[2][0],$GUI_DISABLE)
+	GUICtrlSetState($igf_mn[2][0],$GUI_DISABLE)
+	GUICtrlSetState($igf_mn[6][0],$GUI_DISABLE)
+	GUICtrlSetState($igf_mn[7][0],$GUI_DISABLE)
+	GUICtrlSetState($igf_mn[8][0],$GUI_DISABLE)
 
-	return $igf_menu
+#cs
+Row|Col 0|Col 1|Col 2
+[0]|3||
+[1]|5|IGF_PakOpen|
+[2]|6|IGF_PakClose|
+[3]|7|IGF_PakRecent|
+[4]|8|IGF_Exit|
+[5]|4||
+[6]|9|IGF_SavLoad|
+[7]|10|IGF_SavSave|
+[8]|11|IGF_SavRestart|
+[9]|12|IGF_ReadMe|
+[10]|13|IGF_About|
+#ce
+
+	return $igf_mn
 
 EndFunc
 
@@ -418,7 +434,7 @@ Func IGF_PakOpen()
  EndFunc
 
 Func IGF_PakClose()
-	GUICtrlSetData($igf_menu[5][0],'Story:')
+	GUICtrlSetData($igf_mn[5][0],'Story:')
 	GUIDelete($igf_pa)
 	IGF_PlayArea()
 EndFunc
@@ -426,7 +442,7 @@ EndFunc
 Func IGF_DirectStart($file)
 	$igf_ini = $file
 	FileChangeDir(GetDir($file));
-	IGF_Start('begin',$saved_data)
+	IGF_Start('begin',$G_saved)
 EndFunc
 
 Func IGF_Loadfile($file)
@@ -434,19 +450,19 @@ Func IGF_Loadfile($file)
 	FileChangeDir(@Scriptdir&"/play")
 	_Zip_UnzipAll($file, @WorkingDir, 1)
 	$igf_ini = "scenario.ini"
-	IGF_Start('begin',$saved_data)
+	IGF_Start('begin',$G_saved)
 EndFunc
 
-Func IGF_Start($section,$saved_data)
+Func IGF_Start($section,$G_saved)
 ;	FileChangeDir(@Scriptdir&"/play")
 	ReadConf()
 	if $section=='begin' Then Welcome(2)
-	GUICtrlSetState($igf_menu[2][0],$GUI_ENABLE)
-	ReadSection($section,$saved_data)
+	GUICtrlSetState($igf_mn[2][0],$GUI_ENABLE)
+	ReadSection($section,$G_saved)
 EndFunc
 
 Func IGF_Exit($w = "")
-	if ($w=="") AND (Ubound($data_tosav)>0) Then
+	if ($w=="") AND (Ubound($G_bucket)>0) Then
 		Switch MsgBox($MB_YESNO + $MB_TASKMODAL, 'Quit from Interactive Grapical Fictions', 'Are you sure?')
 			Case $IDYES
 			GUIDelete($igf_win)
@@ -467,9 +483,8 @@ Func IGF_PlayArea()
 	$igf_pa = GUICreate("", $tpos[2], $tpos[3], $tpos[0] , $tpos[1], $WS_CHILD,0, $igf_win)
 	GUISetFont($G_fontsize,0,0,$G_fontname,$igf_pa,5)
 	GUISetBkColor("0x"&$pa_bgcolor,$igf_pa)
-
-	$scene = GUICtrlCreatePic($pa_bgimage,0,0,$pa_width,$pa_height)
-	GUICtrlSetState($scene,$GUI_DISABLE)
+	$iScene = GUICtrlCreatePic($pa_bgimage,0,0,$pa_width,$pa_height)
+	GUICtrlSetState($iScene,$GUI_DISABLE)
 	GUISetState(@SW_SHOW,$igf_pa)
 	return $igf_pa
 EndFunc
@@ -478,19 +493,19 @@ Func IGF_ScoreBar()
 	local $tpos = Get_Dimensions(false,"playarea")
 	local $fz = Get_Dimensions(false,"size")
 	;Size|12|24|18|9
-	$igf_sb = GUICreate("", $tpos[2], $fz[1]+ $fz[2], $tpos[0] , $tpos[1]-($fz[1]+$fz[2]+4), $WS_CHILD, 0, $igf_win)
-	$scores = GUICtrlCreateLabel("Score",$fz[3],$fz[3]+.5*$fz[3],$tpos[2]-$fz[3],$fz[1]);
+	$igf_sb = GUICreate("", $tpos[2], $fz[1]+ $fz[2], $tpos[0] , $tpos[1]-($fz[1]+$fz[2] + 2 ), $WS_CHILD, 0, $igf_win)
+	$iScores = GUICtrlCreateLabel("Score",$fz[3],$fz[3]+.5*$fz[3],$tpos[2]-$fz[3],$fz[1]);
 	GUISetBkColor(0x220022,$igf_sb)
-	GUICtrlSetColor($scores,0xFFFFFF)
-	GUICtrlSetBkColor($scores,$GUI_BKCOLOR_TRANSPARENT)
-	GUICtrlSetFont($scores,$fz[0],700)
-	GUICtrlSetState($scores,$GUI_ONTOP)
+	GUICtrlSetColor($iScores,0xFFFFFF)
+	GUICtrlSetBkColor($iScores,$GUI_BKCOLOR_TRANSPARENT)
+	GUICtrlSetFont($iScores,$fz[0],700)
+	GUICtrlSetState($iScores,$GUI_ONTOP)
 	GUISetState(@SW_SHOW,$igf_sb)
 	return $igf_sb
 EndFunc
 
 Func IGF_SavSave()
-	$save_file = FilesaveDialog($pa_title & " Saved Files",$igf_saved,"All (*."&$keyword&".ini)", $FD_PATHMUSTEXIST+$FD_PROMPTOVERWRITE)
+	$save_file = FilesaveDialog($pa_title & " Saved Files",$igf_saved,"All (*."&$G_keyword&".ini)", $FD_PATHMUSTEXIST+$FD_PROMPTOVERWRITE)
 	If @error Then
 		ConsoleWrite("IGF_SavSave Error:"&$Save_file&" - "&@error)
 	Else
@@ -503,9 +518,9 @@ Func IGF_SavSave()
 		$sBeen = StringTrimRight($sBeen,1)
 		;_ArrayDisplay($aBeen)
 		;msgbox(0,'',$sBeen)
-		_ArrayAdd($data_tosav,"been"&"|"&$sBeen)
+		_ArrayAdd($G_bucket,"been"&"|"&$sBeen)
 
-		IniWriteSection ( $save_file, "data", $data_tosav,0 )
+		IniWriteSection ( $save_file, "data", $G_bucket,0 )
 
 		Global $been[0]
 
@@ -516,16 +531,16 @@ EndFunc
 
 Func IGF_SavLoad()
 	local $section
-	$save_file = FileOpenDialog($pa_title & " Saved Files",$igf_saved,"All (*."&$keyword&".ini)", $FD_FILEMUSTEXIST)
+	$save_file = FileOpenDialog($pa_title & " Saved Files",$igf_saved,"All (*."&$G_keyword&".ini)", $FD_FILEMUSTEXIST)
 	If @error Then
 		return ""
 	Else
-		$saved_data = IGF_SavRead($save_file)
-		if $keyword == $saved_data[1][1] Then
-			$section = $saved_data[2][1]
-			$step = $saved_data[3][1]
-			$abeen = $saved_data[5][1]
-			$score = $saved_data[4][1]
+		$G_saved = IGF_SavRead($save_file)
+		if $G_keyword == $G_saved[1][1] Then
+			$section = $G_saved[2][1]
+			$step = $G_saved[3][1]
+			$abeen = $G_saved[5][1]
+			$score = $G_saved[4][1]
 		Endif
 
 		global $been[] = _StringExplode ( $aBeen, "," )
@@ -536,22 +551,36 @@ Func IGF_SavLoad()
 
 		GUIDelete($igf_pa)
 		IGF_PlayArea()
-		IGF_Start($section,$saved_data)
+		GUICtrlSetData($iScores,"Score: "&$score)
+		IGF_Start($section,$G_saved)
 
 	Endif
 EndFunc
 
 Func IGF_SavRestart($file)
-	global $been[0]
+	Global_ResetVar()
 	GUIDelete($igf_pa)
+	GUIDelete($igf_sb)
+	IGF_ScoreBar()
 	IGF_PlayArea()
-	IGF_Start('begin',$saved_data)
+	IGF_Start('begin',$G_saved)
 EndFunc
 
 Func IGF_SavRead($sfn)
 	return IniReadSection($sfn,"data")
 EndFunc
 
+Func Global_ResetVar()
+	Global $been[0]
+	Global $score = 0
+	Global $been[0]
+	Global $step = 0
+	Global $iScene
+	Global $iScores
+	Global $G_obj[0]
+	Global $G_saved[0][2]
+	Global $G_bucket[0][2]
+EndFunc
 
 Func GetDir($sFilePath)
 

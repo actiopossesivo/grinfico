@@ -7,13 +7,19 @@ Opt('WINTITLEMATCHMODE', 4)
 
 RunOnce()
 
-Global $igf_menu = IGF_Win()
+Global $igf_mn = IGF_Win()
 Global $igf_sb = IGF_ScoreBar()
 Global $igf_pa = IGF_PlayArea()
+Global $G_obj[0]
+Global $G_saved[0][2]
+Global $G_bucket[0][2]
+
+
 local $top = 0
-Global $png_obj[0]
-Global $saved_data[0][2]
-Global $data_tosav[0][2]
+
+SplashImageOn("",@Scriptdir&"\prop\igf-splash.jpg",600,120,-1,-1, $DLG_NOTITLE )
+Sleep(3000)
+SplashOff()
 
 ;C:\IGF\SRC\Scenario.ini
 
