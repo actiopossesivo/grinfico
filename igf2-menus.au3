@@ -1,3 +1,33 @@
+Func IGF_Conf()
+	local $conf = IniReadSection(@ScriptDir&"\prop\igf-conf.ini","igf")
+	For $i = 1 To Ubound($conf)-1
+		if $conf[$i][0] == 'dialog_bgr' Then $dialog_bgr = @ScriptDir&"\prop\"&$conf[$i][1]
+		if $conf[$i][0] == 'fontname' Then $G_fontname=$conf[$i][1]
+		if $conf[$i][0] == 'fontsize' Then $G_fontsize=$conf[$i][1]
+	Next
+EndFunc
+
+Func PackageConf()
+	local $conf = IniReadSection($pack_ini,"config")
+	For $i = 1 To Ubound($conf)-1
+		if $conf[$i][0] == 'width' Then $pa_width=$conf[$i][1]
+		if $conf[$i][0] == 'height' Then $pa_height=$conf[$i][1]
+		if $conf[$i][0] == 'vidheight' Then $pa_vidheight=$conf[$i][1]
+		if $conf[$i][0] == 'title' Then $pa_title=$conf[$i][1]
+		if $conf[$i][0] == 'bgcolor' Then $pa_bgcolor = $conf[$i][1]
+		if $conf[$i][0] == 'tcolor' Then $pa_color = $conf[$i][1]
+		if $conf[$i][0] == 'acolor' Then $a_color = $conf[$i][1]
+		if $conf[$i][0] == 'bgimage' Then $pa_bgimage = $conf[$i][1]
+		if $conf[$i][0] == 'keyword' Then $G_keyword=$conf[$i][1]
+		if $conf[$i][0] == 'vbtn_width' Then $vbtn_width=$conf[$i][1]
+		if $conf[$i][0] == 'hbtn_width' Then $hbtn_width=$conf[$i][1]
+		if $conf[$i][0] == 'dialog_bgr' Then $dialog_bgr = @WorkingDir&"\"&$conf[$i][1]
+
+		if $G_keyword=="" Then $G_keyword = StringRegExpReplace ( StringLower($pa_title), "[\s|\W]", "")
+
+	Next
+EndFunc
+
 Func vidplay($video,$left=0,$top=0,$width=0,$height=0)
 	if $width == 0 Then $width = $pa_width
 	if $height == 0 Then $height = $pa_vidheight
@@ -12,7 +42,6 @@ Func vidplay($video,$left=0,$top=0,$width=0,$height=0)
 	EndWith
 	return $oovid
 EndFunc
-; ----------------------
 
 Func IGF_ReadMe()
 	local $txt = "No Readme.txt found in this packcage"
@@ -25,8 +54,8 @@ Func IGF_ReadMe()
 EndFunc
 
 Func IGF_About()
-	msgbox(0,"About IgFE", _
-		"Interactive Graphical Fictions Engine"&@CRLF&@CRLF& _
+	msgbox(0,"About Grinfico", _
+		"Grinfico - Graphical Interactive Fictions Engine"&@CRLF&@CRLF& _
 		"Engine:"&@CRLF&"https://github.com/actiopossesivo/igfiction"&@CRLF&@CRLF& _
 		"Wiki:"&@CRLF&"https://goo.gl/bQW68P"&@CRLF)
 EndFunc
@@ -41,11 +70,11 @@ Func Get_Dimensions($debug=False,$G_keyword='')
 
 	local $fz[] = [ $G_fontsize, $G_fontsize*2, $G_fontsize*1.5, $G_fontsize*.75 ] ; fz, h, pad, hsep
 	local $pa[] = [ $w-(2*$fz[2]), $h-(2*$fz[2]) ]
-	local $wz[0][5] ;  ref, l,t,w,h
+	local $wz[0][5] ; ref, l,t,w,h
 
 	$D = _DesktopVisibleArea()
 
-	_ArrayAdd($wz, "Size" &"|"& $fz[0] &"|"& $fz[1] &"|"& $fz[2] &"|"& $fz[3] )
+	_ArrayAdd($wz, "Base" &"|"& $fz[0] &"|"& $fz[1] &"|"& $fz[2] &"|"& $fz[3] )
 	_ArrayAdd($wz, "Desktop" &"|"& 0 &"|"& 0 &"|"& $D[0] &"|"& $D[1] )
 	_ArrayAdd($wz, "Playarea" &"|"& ($D[0]/2)-($w/2) &"|"& ($D[1]/2)-($h/2) &"|"& $w &"|"& $h )
 	_ArrayAdd($wz, "Frame" &"|"& $fz[3] &"|"& $h-$fz[3] &"|"& $w-(2*$fz[3]) &"|"& $fz[1] )
@@ -102,7 +131,7 @@ Func Text($top,$txt,$goto="")
 
 	local $tpos = Get_Dimensions(false,"inside")
 	local $bpos = Get_Dimensions(false,"frame")
-	local $fz	= Get_Dimensions(false,"size")
+	local $fz	= Get_Dimensions(false,"base")
 
 	local $aTxt = Textis($txt);
 	local $height = calc_height($fz,$tpos,$aTxt)
@@ -111,8 +140,8 @@ Func Text($top,$txt,$goto="")
 	if IsArray($aTxt) Then
 		$add = $fz[1]
 		local $pt = GUICtrlCreateLabel($aTxt[0],$tpos[0],$tpos[1]-$height-$add,$tpos[2],$add )
-		GUICtrlSetColor($pt,0xFFFF00)
-		GUICtrlSetFont($pt,$fz[0]*.9,700)
+		GUICtrlSetColor($pt,"0x"&$a_color)
+		GUICtrlSetFont($pt,$fz[0]*.9,600)
 		GUICtrlSetBkColor($pt,$GUI_BKCOLOR_TRANSPARENT )
 		local $t = GUICtrlCreateLabel($aTxt[1],$tpos[0],$tpos[1]-$height,$tpos[2],$height )
 		_ArrayAdd($vdispose,$pt)

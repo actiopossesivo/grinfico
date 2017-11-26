@@ -14,12 +14,13 @@ Global $G_obj[0]
 Global $G_saved[0][2]
 Global $G_bucket[0][2]
 
-
 local $top = 0
 
-SplashImageOn("",@Scriptdir&"\prop\igf-splash.jpg",600,120,-1,-1, $DLG_NOTITLE )
-Sleep(3000)
-SplashOff()
+if IniRead(@ScriptDir&"\prop\igf-conf.ini","igf","splash",1) == 1 Then
+	SplashImageOn("",@Scriptdir&"\prop\igf-splash.jpg",500,300,-1,-1, $DLG_NOTITLE )
+	Sleep(3000)
+	SplashOff()
+EndIf
 
 ;C:\IGF\SRC\Scenario.ini
 

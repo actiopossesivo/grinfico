@@ -15,29 +15,33 @@
 #Include <lib/Icons.au3>
 
 Opt('WINTITLEMATCHMODE', 4)
+
 local $tbpos =_DeskTopVisibleArea()
 
-Global $igf_ini = "scenario.ini"
+Global $dialog_bgr = @ScriptDir&"\prop\gray-tr.png"
+Global $igf_folder = @MyDocumentsDir&"\igfiction\pack"
+Global $igf_saved = @MyDocumentsDir&"\igfiction\saved"
+Global $win_bgrcolor = "030003"
+Global $win_width = $tbpos[0]
+Global $win_height = $tbpos[1]
+Global $G_fontname = ""
+Global $G_fontsize = 12
 
+IGF_Conf()
+
+Global $pack_ini = "scenario.ini"
+
+Global $G_keyword = ""
 Global $pa_width = 800
 Global $pa_height = 480
 Global $pa_vidheight = 400
 Global $pa_title = "Untitled"
 Global $pa_bgcolor = "333333"
 Global $pa_color = "ffffff"
+Global $a_color = "3399CC"
 Global $pa_bgimage
-
-Global $G_fontname = "Tahoma"
-Global $G_fontsize = 11
-Global $G_keyword = ""
-
-Global $win_bgrcolor = "030003"
-Global $igf_folder = @MyDocumentsDir&"\igfiction\pack"
-Global $igf_saved = @MyDocumentsDir&"\igfiction\saved"
-
-Global $dialog_bgr = @ScriptDir&"\prop\dark-tr.png"
-Global $win_width = $tbpos[0]
-Global $win_height = $tbpos[1]
+Global $vbtn_width = 400
+Global $hbtn_width = 180
 
 Global $igf_win
 
@@ -47,14 +51,10 @@ Global $iScores
 Global $score = 0
 Global $been[0]
 
-;Global $ca[0]
-;Global $ct[0]
-;Global $holders[0]
-
 Func ReadSection($section,$G_saved)
 
-	local $opt = IniReadSection($igf_ini,$section)
-	local $Sections = IniReadSectionNames($igf_ini)
+	local $opt = IniReadSection($pack_ini,$section)
+	local $Sections = IniReadSectionNames($pack_ini)
 	local $current = _ArraySearch($Sections,$section)
 	local $gtext[0]
 	local $gpng[0][5]
@@ -100,7 +100,7 @@ Func ReadSection($section,$G_saved)
 				$next_page = $Sections[$n]
 				if $n == 2 Then msgbox(0,'',"The Story seem to be unfinished?")
 
-			Case "back"
+			Case "prev"
 				$n = $current - 1
 				if $n<2 Then $n = 2
 				$next_page = $Sections[$n]
@@ -123,7 +123,7 @@ Func ReadSection($section,$G_saved)
 
 			Case "vid"
 				_ArrayAdd($gvid,$opt[$i][1],0,"|")
-				;$video = $opt[$i][1]
+
 			Case "goto"
 				$goto = $opt[$i][1]
 
@@ -194,7 +194,7 @@ Func Prompting($button, $spot, $vbutton)
 	local $goto[0]
 
 	for $i = 0 to $B-1
-		local $res = Prompt($button[$i][1],$top,$B)
+		local $res = vPrompt($button[$i][1],$top,$B)
 		$top = $res[0]
 		_ArrayAdd($ca,$res[1])
 		_ArrayAdd($goto,$button[$i][0])
@@ -202,7 +202,7 @@ Func Prompting($button, $spot, $vbutton)
 	Next
 
 	for $i = 0 to $V-1
-		local $res = vPrompt($vbutton[$i][1],$left,$V)
+		local $res = hPrompt($vbutton[$i][1],$left,$V)
 		$left= $res[0]
 		_ArrayAdd($ca,$res[1])
 		_ArrayAdd($goto,$vbutton[$i][0])
@@ -236,11 +236,11 @@ Func Prompting($button, $spot, $vbutton)
 
 EndFunc
 
-Func vPrompt($txt,$left,$V)
+Func hPrompt($txt,$left,$V)
 
 	local $tpos = Get_Dimensions(false,"inside")
-	local $fz	= Get_Dimensions(false,"size")
-	Local $width = 150
+	local $fz = Get_Dimensions(false,"base")
+	Local $width = $hbtn_width
 	Local $height = $fz[1]
 	local $top = $tpos[1] - $height
 	if $left==0 then $left = $tpos[2]/2 - (($width*$V)/2)
@@ -264,12 +264,12 @@ Func vPrompt($txt,$left,$V)
 
 EndFunc
 
-Func Prompt($txt,$top,$A)
+Func vPrompt($txt,$top,$A)
 
 	local $tpos = Get_Dimensions(false,"inside")
-	local $fz	= Get_Dimensions(false,"size")
+	local $fz	= Get_Dimensions(false,"base")
 
-	local $width = Ceiling($tpos[2]/3)
+	local $width = $vbtn_width
 	Local $height = $tpos[3]
 	local $left = ($tpos[2]/2)-($width/2)
 	local $bubble = PutPNG($dialog_bgr,-$pa_width,0,0,0)
@@ -331,28 +331,11 @@ Func RunOnce()
 	FileInstall("dark-tr.png",@ScriptDir&"/prop/dark-tr.png",0)
 	FileInstall("gray-tr.png",@ScriptDir&"/prop/gray-tr.png",0)
 	FileInstall("white-tr.png",@ScriptDir&"/prop/white-tr.png",0)
-	FileInstall("igf-spash.jpg",@ScriptDir&"/prop/igf-splash.jpg",0)
+	FileInstall("igf-splash.jpg",@ScriptDir&"/prop/igf-splash.jpg",0)
 	FileInstall("igf-bgr.jpg",@ScriptDir&"/prop/igf-bgr.jpg",0)
 
 	IGF_Init(@ScriptDir&"/prop/igf-conf.ini")
 
-EndFunc
-
-Func ReadConf()
-	local $conf = IniReadSection($igf_ini,"config")
-	For $i = 1 To Ubound($conf)-1
-		if $conf[$i][0] == 'width' Then $pa_width=$conf[$i][1]
-		if $conf[$i][0] == 'height' Then $pa_height=$conf[$i][1]
-		if $conf[$i][0] == 'vidheight' Then $pa_vidheight=$conf[$i][1]
-		if $conf[$i][0] == 'title' Then $pa_title=$conf[$i][1]
-		if $conf[$i][0] == 'bgcolor' Then $pa_bgcolor = $conf[$i][1]
-		if $conf[$i][0] == 'color' Then $pa_color = $conf[$i][1]
-		if $conf[$i][0] == 'bgimage' Then $pa_bgimage = $conf[$i][1]
-		if $conf[$i][0] == 'fontname' Then $G_fontname=$conf[$i][1]
-		if $conf[$i][0] == 'fontsize' Then $G_fontsize=$conf[$i][1]
-		if $conf[$i][0] == 'keyword' Then $G_keyword=$conf[$i][1]
-		if $G_keyword=="" Then $G_keyword = StringRegExpReplace ( StringLower($pa_title), "[\s|\W]", "")
-	Next
 EndFunc
 
 Func Package_Browse($folder)
@@ -380,7 +363,7 @@ Func IGF_Init($ini)
 EndFunc
 
 Func IGF_Win()
-	$igf_win = GUICreate("IgFE", $win_width,$win_height,0,0,$WS_SYSMENU+$WS_MAXIMIZE+$WS_MINIMIZEBOX)
+	$igf_win = GUICreate("Grinfico", $win_width,$win_height,0,0,$WS_SYSMENU+$WS_MAXIMIZE+$WS_MINIMIZEBOX)
 	GUISetBkColor("0x"&$win_bgrcolor,$igf_win)
 	GUISetState(@SW_SHOW,$igf_win)
 
@@ -440,7 +423,7 @@ Func IGF_PakClose()
 EndFunc
 
 Func IGF_DirectStart($file)
-	$igf_ini = $file
+	$pack_ini = $file
 	FileChangeDir(GetDir($file));
 	IGF_Start('begin',$G_saved)
 EndFunc
@@ -449,13 +432,13 @@ Func IGF_Loadfile($file)
 	FileDelete(@Scriptdir&"/play/*.*")
 	FileChangeDir(@Scriptdir&"/play")
 	_Zip_UnzipAll($file, @WorkingDir, 1)
-	$igf_ini = "scenario.ini"
+	$pack_ini = "scenario.ini"
 	IGF_Start('begin',$G_saved)
 EndFunc
 
 Func IGF_Start($section,$G_saved)
 ;	FileChangeDir(@Scriptdir&"/play")
-	ReadConf()
+	PackageConf()
 	if $section=='begin' Then Welcome(2)
 	GUICtrlSetState($igf_mn[2][0],$GUI_ENABLE)
 	ReadSection($section,$G_saved)
@@ -491,7 +474,7 @@ EndFunc
 
 Func IGF_ScoreBar()
 	local $tpos = Get_Dimensions(false,"playarea")
-	local $fz = Get_Dimensions(false,"size")
+	local $fz = Get_Dimensions(false,"base")
 	;Size|12|24|18|9
 	$igf_sb = GUICreate("", $tpos[2], $fz[1]+ $fz[2], $tpos[0] , $tpos[1]-($fz[1]+$fz[2] + 2 ), $WS_CHILD, 0, $igf_win)
 	$iScores = GUICtrlCreateLabel("Score",$fz[3],$fz[3]+.5*$fz[3],$tpos[2]-$fz[3],$fz[1]);
