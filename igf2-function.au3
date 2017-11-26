@@ -58,7 +58,7 @@ Func ReadSection($section,$G_saved)
 	local $current = _ArraySearch($Sections,$section)
 	local $gtext[0]
 	local $gpng[0][5]
-	local $gvid[0|5]
+	local $gvid[0][5]
 	local $gspot[0][5]
 	local $gbutton[0][2]
 	local $gvbutton[0][2]
@@ -142,8 +142,8 @@ Func ReadSection($section,$G_saved)
 
 	if Ubound($G_obj)>-1 Then ClearingGUICtrl($G_obj)
 
-	if Ubound($gvid)>-1 Then
-		$ovid = vidplay($gvid[0][0],$gvid[0][1],$gvid[0][2],$gvid[0][3],$gvid[0][4])
+	if Ubound($gvid)>0 Then
+		$ovid = vidplay($gvid[1][0],$gvid[1][1],$gvid[1][2],$gvid[1][3],$gvid[1][4])
 		GUICtrlSetState($ovid,$GUI_DISABLE)
 		_ArrayAdd($G_obj,$ovid)
 	Endif
