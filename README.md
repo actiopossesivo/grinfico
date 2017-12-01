@@ -13,7 +13,7 @@ Grinfico using INI file format as its scenario. A simple text files with a basic
 	button=choice|Just Look arround
 
 ### About
-I create these little programs as experiments to have a play with the language and bring back old memories of old games I used to play.  I would gladly accept pointers from others to improve the code and make it more efficient, or simplify the code. 
+I create these little programs as experiments to have a play with the language and bring back old memories of old games I used to play.  I would gladly accept pointers from others to improve the code and make it more efficient, or simplify the code.
 
 ### Requirement
  * The .igf files (The Game)
@@ -21,7 +21,9 @@ I create these little programs as experiments to have a play with the language a
  * Windows Media Player (WMPlayer.ocx), with latest codec
 
 ### Demo
-Goto https://goo.gl/hkh7gh and download "demo.zip" into \igf\games, then run the script or compiled files (.exe)
+ - Goto https://goo.gl/hkh7gh and download "demo.zip" into *My Documents\igfiction\pack, 
+ - then run the script or compiled files (grinfico.exe)
+ - open it
 
 ### Authoring
 See the wiki(https://github.com/actiopossesivo/igfiction/wiki)
