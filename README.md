@@ -1,7 +1,16 @@
-# IgFE
-Interactive Graphical Fictions Engine
+# IgFE : Grinfico
+Graphical Interactive Fictions Engine:
 
-Create your own Interactive Fiction with this free, easy to use application for Windows
+Create your own Interactive Fiction(Visual Novell) with this free, easy to use application for Windows (It's an Autoit Scripts).
+
+Grinfico using INI file format as its scenario. A simple text files with a basic structure composed of sections, properties, and values. Like this:
+
+	[room2-ex-act3]
+	png=ang3.png|300|80|400|400
+	png=luc3.png|30|80|400|400
+	Text=Julia:: So you already meet each other?
+	button=begin|I Like to Start over
+	button=choice|Just Look arround
 
 ### About
 I create these little programs as experiments to have a play with the language and bring back old memories of old games I used to play.  I would gladly accept pointers from others to improve the code and make it more efficient, or simplify the code. 
