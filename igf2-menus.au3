@@ -28,6 +28,21 @@ Func PackageConf()
 	Next
 EndFunc
 
+; _GUICtrlCreateGIF($vGIF, $vAdditionalData, $iLeft, $iTop, $iWidth = Default, $iHeight = Default, $iRenderingStyle = Default, $iForcedARGB = Default, $hGIFControl = 0)
+
+Func gifplay($file,$left=0,$top=0,$width=0,$height=0)
+	Global $hGIFThread
+	Global $tFrameCurrent
+	local $as= _GUICtrlCreateGIF($file,"", $left, $top, $width, $height, Default, Default,Default)
+	sleep(1)
+	_GIF_PauseAnimation($as)
+#cs
+	Sleep(1)
+	_GIF_ResumeAnimation($as)
+#ce
+	return $as
+EndFunc
+
 Func vidplay($video,$left=0,$top=0,$width=0,$height=0)
 	if $width == 0 Then $width = $pa_width
 	if $height == 0 Then $height = $pa_vidheight

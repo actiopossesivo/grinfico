@@ -13,6 +13,8 @@
 #include <lib/wmp.au3>
 #include <lib/Zip.au3>
 #Include <lib/Icons.au3>
+#Include <lib/GIFanimation.au3>
+
 
 Opt('WINTITLEMATCHMODE', 4)
 
@@ -26,8 +28,6 @@ Global $win_width = $tbpos[0]
 Global $win_height = $tbpos[1]
 Global $G_fontname = ""
 Global $G_fontsize = 12
-
-IGF_Conf()
 
 Global $pack_ini = "scenario.ini"
 
@@ -59,6 +59,7 @@ Func ReadSection($section,$G_saved)
 	local $gtext[0]
 	local $gpng[0][5]
 	local $gvid[0][5]
+	local $ggif[0][5]
 	local $gspot[0][5]
 	local $gbutton[0][2]
 	local $gvbutton[0][2]
@@ -68,6 +69,8 @@ Func ReadSection($section,$G_saved)
 	ReDim $G_bucket[0][2]
 
 	GUICtrlSetState($igf_mn[7][0],$GUI_DISABLE)
+
+	if ($current > 2) Then GUICtrlSetState($igf_mn[6][0],$GUI_ENABLE)
 
 	for $i = 0 to Ubound($opt)-1
 		Switch StringLower($opt[$i][0])
@@ -124,6 +127,9 @@ Func ReadSection($section,$G_saved)
 			Case "vid"
 				_ArrayAdd($gvid,$opt[$i][1],0,"|")
 
+			Case "gif"
+				_ArrayAdd($ggif,$opt[$i][1],0,"|")
+
 			Case "goto"
 				$goto = $opt[$i][1]
 
@@ -143,9 +149,15 @@ Func ReadSection($section,$G_saved)
 	if Ubound($G_obj)>-1 Then ClearingGUICtrl($G_obj)
 
 	if Ubound($gvid)>0 Then
-		$ovid = vidplay($gvid[1][0],$gvid[1][1],$gvid[1][2],$gvid[1][3],$gvid[1][4])
+		$ovid = vidplay($gvid[0][0],$gvid[0][1],$gvid[0][2],$gvid[0][3],$gvid[0][4])
 		GUICtrlSetState($ovid,$GUI_DISABLE)
 		_ArrayAdd($G_obj,$ovid)
+	Endif
+
+	if Ubound($ggif)>0 Then
+		$ogif = gifplay($ggif[0][0],$ggif[0][1],$ggif[0][2],$ggif[0][3],$ggif[0][4])
+		;GUICtrlSetState($ogif,$GUI_DISABLE)
+		_ArrayAdd($G_obj,$ogif)
 	Endif
 
 	if Ubound($gpng)>-1 Then
@@ -299,7 +311,7 @@ Func Menu_GM($click)
 	Next
 EndFunc
 
-Func Welcome($wait=3)
+Func Welcome($wait=1)
 	local $width = $pa_width/2
 	local $height = $pa_height/2
 	local $bubble
@@ -436,9 +448,17 @@ Func IGF_Loadfile($file)
 	IGF_Start('begin',$G_saved)
 EndFunc
 
+Func PlayArea_Set()
+	if IsHWnd($igf_sb) Then GUIDelete($igf_sb)
+	if IsHWnd($igf_pa) Then GUIDelete($igf_pa)
+	IGF_ScoreBar()
+	IGF_PlayArea()
+EndFunc
+
 Func IGF_Start($section,$G_saved)
 ;	FileChangeDir(@Scriptdir&"/play")
 	PackageConf()
+	PlayArea_Set()
 	if $section=='begin' Then Welcome(2)
 	GUICtrlSetState($igf_mn[2][0],$GUI_ENABLE)
 	ReadSection($section,$G_saved)
