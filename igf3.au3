@@ -62,7 +62,7 @@ Func PackBrowse($folder)
 
 	if $sFileOpenDialog<>"" Then
 		local $we = _Zip_UnzipAll($sFileOpenDialog, $PlayDir, 20+512)
-		ConsoleWrite($we & " -- "& $sFileOpenDialog &"->"& $Playdir &@CRLF)
+		;ConsoleWrite($we & " -- "& $sFileOpenDialog &"->"& $Playdir &@CRLF)
 		PackOpen($PlayDir&"\scenario.ini")
 	Endif
 

@@ -13,7 +13,6 @@
 
 #Include <lib/_Zip.au3>
 
-
 Opt('WINTITLEMATCHMODE', 4)
 
 Func _ArrayReplace($array, $values)
@@ -111,13 +110,17 @@ Func ReSize()
 	local $f = GetSize_of('font')
 	local $d = GetDimension_of('PlayArea')
 	local $p = WinGetPos($hWin)
+	if $d[2]=="" Then $d[2] = 800
+	if $d[3]=="" Then $d[3] = 480
 	$d[0] = $p[2]/2 - $d[2]/2
 	$d[1] = $p[3]/2 - $d[3]/2 - 16
 	if $d[0]<0 Then $d[0]=0
 	if $d[1]<0 Then $d[1]=0
 	WinMove ( $hSB,"",$d[0],$d[1]-(3*$f[0])-($f[0]/2))
-	WinMove ( $hPA,"",$d[0],$d[1])
-	GUICtrlSetState($hPA, $GUI_FOCUS)
+	if $hPA<>"" Then
+		WinMove ( $hPA,"",$d[0],$d[1])
+		GUICtrlSetState($hPA, $GUI_FOCUS)
+	Endif
 EndFunc
 
 Func Text_Next($p1,$p2)
@@ -135,7 +138,6 @@ Func Text_isArray($txt)
 		return $txt
 	EndIf
 EndFunc
-
 
 Func AppClose()
 	GUIDelete($hWin)
@@ -311,7 +313,7 @@ Func LoadConfig($file='scenario.ini',$reset=0)
 
 		EndSwitch
 
-		 $conf[$i][1]=''
+			$conf[$i][1]=''
 	Next
 
 	if $keyword=="" Then $keyword = StringRegExpReplace ( StringLower($title), "[\s|\W]", "")
@@ -327,9 +329,9 @@ Func LoadConfig($file='scenario.ini',$reset=0)
 	$aSize = _ArrayReplace($aSize, "prompt" &"|"& $hbtn_width &"|"& $vbtn_width )
 	$aSize = _ArrayReplace($aSize, "padding" &"|"& $fontsize/2 &"|"& $fontsize/2 )
 
-	$aDimension = _ArrayReplace($aDimension, "ScoreBar" &"|"& 20 &"|"& (130/2)-(3*$fontsize)-($fontsize/2)-22 &"|"& $width &"|"& 3*$fontsize )
+	$aDimension = _ArrayReplace($aDimension, "ScoreBar" &"|"& 20 &"|"& (130/2)-(3*$fontsize)-($fontsize/2)-30 &"|"& $width &"|"& 3*$fontsize )
 	$aDimension = _ArrayReplace($aDimension, "PlayArea" &"|"& 20 &"|"& (130/2) &"|"& $width &"|"& $height )
-	$aDimension = _ArrayReplace($aDimension, "Desktop" &"|"& $D[0]/2 - $width/2 &"|"& $D[1]/8 &"|"& $width+40 &"|"& $height+130 )
+	$aDimension = _ArrayReplace($aDimension, "Desktop" &"|"& $D[0]/2 - (80+$width)/2 &"|"& (130/2) &"|"& $width+40 &"|"& $height+130 )
 	$aDimension = _ArrayReplace($aDimension, "Inside" &"|"& $fontsize*2 &"|"& $height-($fontsize*2) &"|"& $width-(4*$fontsize) &"|"& 2*$fontsize )
 
 EndFunc
@@ -405,14 +407,17 @@ Func Init_Win($inifile)
 	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("&About",$menu_help)	&"|"&	"About_This"	&"|"& "" )
 	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("&Logo",$menu_help)	&"|"&	"SplashMe"	&"|"& "" )
 
+	$label = GUICtrlCreatePic(@Scriptdir&"\prop\grinfico.jpg",$d[2]/2-140,$d[3]/2-150,280,300)
 	GuiSetState(@SW_SHOW,$hWin)
+	Sleep(2000)
+	GUICtrlDelete($label)
 
 EndFunc
 
 Func Init_ScoreBar()
 	local $d = GetDimension_of('ScoreBar')
 	local $f = GetSize_of('font')
-	$hSB = GUICreate("ScoreBar",$d[2],$d[3],$d[0],$d[1], $WS_CHILD,$WS_EX_TOPMOST, $hWin)
+	$hSB = GUICreate("ScoreBar",$d[2],$d[3],$d[0],$d[1], BitOR($WS_CHILD,$WS_BORDER),$WS_EX_TOPMOST, $hWin)
 	GUISetBkColor(0x331111,$hSB)
 	GUISetFont($f[0]*.85,700,Default,GetConf('fontname'),$hSB,5)
 	PNG(@ScriptDir&"\prop\scorebar.png",0,0,$d[2],$d[3],0)

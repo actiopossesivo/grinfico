@@ -139,7 +139,6 @@ Func CheckBeen($section)
 	return $pass
 EndFunc
 
-
 Func Text($top,$txt,$goto)
 	local $tb = PNG(GetConf('bgdialog'),-1,-1,1,1,1)
 	local $d = GetDimension_of('inside')
@@ -231,7 +230,6 @@ Func Prompting($hbutton,$vbutton,$spot)
 	return $res
 
 EndFunc
-
 
 Func Prompt($type,$prompt,$pos,$total)
 
