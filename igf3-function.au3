@@ -8,219 +8,13 @@
 #include <Array.au3>
 #include <String.au3>
 #include <GuiMenu.au3>
+#include <Crypt.au3>
+
 #Include <lib/Icons.au3>
 #include <lib/GIFAnimation.au3>
-
 #Include <lib/_Zip.au3>
 
 Opt('WINTITLEMATCHMODE', 4)
-
-Func _ArrayReplace($array, $values)
-
-	local $s = StringSplit($values,"|")
-	local $i = _ArraySearch($array, StringStripWS($s[1],7),0,0 )
-	if $i>-1 Then _ArrayDelete($array,$i)
-
-	_ArrayAdd($array,$values)
-
-	return $array
-
-Endfunc
-
-Func calc_height($fz,$md,$txt='')
-	local $n = Ceiling( StringLen($txt) / 110)
-	if $n < 1 Then $n=1
-	local $height = $n * $fz
-	return $height
-EndFunc
-
-Func ClearingGUICtrl($dismiss)
-	for $i = 0 to Ubound($dismiss)-1
-		GUICtrlDelete($dismiss[$i])
-	Next
-	local $d[0]
-	return $d
-EndFunc
-
-Func GIF($file,$left=0,$top=0,$width=-1,$height=-1)
-	local $hGIF = _GUICtrlCreateGIF($file, "", $left, $top, $width, $height,1)
-	return $hGif
-EndFunc
-
-Func PNG($file,$pl=0,$pt=0,$pw=0,$ph=0,$tm=1)
-	local $extm = Default
-	local $stm = $SS_CENTERIMAGE
-	if $tm==1 Then
-		$extm = $WS_EX_TOPMOST
-		$stm = $SS_NOTIFY
-	Endif
-
-	local $Picpng = GUICtrlCreatePic('',$pl,$pt,$pw,$ph,$stm,$extm)
-	_SetImage($Picpng,$file)
-
-	if $tm==1 Then
-		GUICtrlSetCursor($Picpng,0)
-	Else
-		GUICtrlSetState($Picpng,$GUI_DISABLE)
-	EndIf
-	return $Picpng
-EndFunc
-
-; Verified -------------------------------------
-
-Func GetDir($sFilePath)
-
-	Local $aFolders = StringSplit($sFilePath, "\")
-	Local $iArrayFoldersSize = UBound($aFolders)
-	Local $FileDir = ""
-
-	If (Not IsString($sFilePath)) Then
-		Return SetError(1, 0, -1)
-	EndIf
-
-	$aFolders = StringSplit($sFilePath, "\")
-	$iArrayFoldersSize = UBound($aFolders)
-
-	For $i = 1 To ($iArrayFoldersSize - 2)
-		$FileDir &= $aFolders[$i] & "\"
-	Next
-
-	Return $FileDir
-
-EndFunc
-
-Func _DeskTopVisibleArea()
-	Local $aInfo[2]
-	Local $aCPos = ControlGetPos('[CLASS:Shell_TrayWnd]', '', '')
-	If IsArray($aCPos) <= 0 Then
-		$aInfo[0] = @DesktopWidth
-		$aInfo[1] = @DesktopHeight
-	ElseIf $aCPos[2] >= @DesktopWidth Then
-		$aInfo[0] = @DesktopWidth
-		$aInfo[1] = @DesktopHeight - ($aCPos[3] - $aCPos[1])
-	Else
-		$aInfo[0] = @DesktopWidth - ($aCPos[2] - $aCPos[0])
-		$aInfo[1] = @DesktopHeight
-	EndIf
-	Return $aInfo
-EndFunc
-
-Func ReSize()
-	local $s = GetDimension_of('ScoreBar')
-	local $f = GetSize_of('font')
-	local $d = GetDimension_of('PlayArea')
-	local $p = WinGetPos($hWin)
-	if $d[2]=="" Then $d[2] = 800
-	if $d[3]=="" Then $d[3] = 480
-	$d[0] = $p[2]/2 - $d[2]/2
-	$d[1] = $p[3]/2 - $d[3]/2 - 16
-	if $d[0]<0 Then $d[0]=0
-	if $d[1]<0 Then $d[1]=0
-	WinMove ( $hSB,"",$d[0],$d[1]-(3*$f[0])-($f[0]/2))
-	if $hPA<>"" Then
-		WinMove ( $hPA,"",$d[0],$d[1])
-		GUICtrlSetState($hPA, $GUI_FOCUS)
-	Endif
-EndFunc
-
-Func Text_Next($p1,$p2)
-	$aDisposal = ClearingGUICtrl($aDisposal)
-	return 2
-EndFunc
-
-Func Text_isArray($txt)
-	local $aText = _StringExplode($txt,"::")
-	if Ubound($aText)>1 Then
-		$aText[0] = StringRegExpReplace ( $aText[0], "\s+$", "")
-		$aText[1] = StringRegExpReplace ( $aText[1], "^\s+", "")
-		return $aText
-	Else
-		return $txt
-	EndIf
-EndFunc
-
-Func AppClose()
-	GUIDelete($hWin)
-	Exit
-EndFunc
-
-Func RunOnce()
-
-	if Not FileExists(@Scriptdir&"/prop") Then DirCreate(@Scriptdir&"/prop")
-
-	if Not FileExists(@ScriptDir&"\prop\scorebar.png") Then FileInstall("1\scorebar.pn_",@ScriptDir&"\prop\scorebar.png",0)
-	if Not FileExists(@ScriptDir&"\prop\grinfico.jpg") Then FileInstall("1\grinfico.jp_",@ScriptDir&"\prop\grinfico.jpg",0)
-	if Not FileExists(@ScriptDir&"\prop\dialog.png") Then FileInstall("1\dialog.pn_",@ScriptDir&"\prop\dialog.png",0)
-	if Not FileExists(@ScriptDir&"\prop\Clear Sans.ttf") Then FileInstall("1\Clear Sans.tt_",@ScriptDir&"\prop\Clear Sans.ttf",0)
-	if Not FileExists(@ScriptDir&"\prop\global.ini") Then FileInstall("1\global.in_",@ScriptDir&"\prop\global.ini",0)
-
-	if Not FileExists(@TempDir&"\grinfico") Then
-		DirCreate(@TempDir&"\grinfico")
-	Else
-		DirRemove(@TempDir&"\grinfico",1)
-		DirCreate(@TempDir&"\grinfico")
-	EndIf
-
-	Dim $Playdir = @TempDir&"\grinfico"
-
-	if Not FileExists(@MyDocumentsDir&"\grinfico")==0 Then DirCreate(@MyDocumentsDir&"\igfiction")
-	if Not FileExists(@MyDocumentsDir&"\grinfico\pack")==0 Then DirCreate(@MyDocumentsDir&"\grinfico\pack")
-	if Not FileExists(@MyDocumentsDir&"\grinfico\saved")==0 Then DirCreate(@MyDocumentsDir&"\grinfico\saved")
-
-	LoadConfig(@ScriptDir&"\prop\global.ini",1)
-
-EndFunc
-
-Func SplashMe()
-	SplashImageOn("",@Scriptdir&"\prop\grinfico.jpg",314,460,-1,100, $DLG_NOTITLE )
-	Sleep(3000)
-	SplashOff()
-EndFunc
-
-Func About_This()
-	local $txt = _
-		FileGetVersion(@AutoItExe, $FV_PRODUCTNAME)  & _
-		FileGetVersion(@AutoItExe, $FV_PRODUCTVERSION) & @CRLF & _
-		FileGetVersion(@AutoItExe, $FV_FILEDESCRIPTION) & @CRLF & @CRLF & _
-		FileGetVersion(@AutoItExe, $FV_COMMENTS) & @CRLF & @CRLF & _
-		"Made with AutoIt "& @AutoItVersion & _
-		""
-	Msgbox($MB_TASKMODAL,'Grinfico',$txt,0,$hWin)
-EndFunc
-
-Func DebugArray($array,$n=1)
-	if @Compiled==0 Then
-	for $i=0 to UBound($array)-1
-		ConsoleWrite($array[$i][0] & @TAB&"= ")
-		local $res =''
-		for $c=1 to $n
-			$res = $res & $array[$i][$c] & ","
-		Next
-		$res = StringTrimRight($res,1)
-		ConsoleWrite($res&@CRLF)
-	Next
-	ConsoleWrite(@CRLF)
-	Endif
-EndFunc
-
-Func WelcomeTitle()
-	local $d = GetDimension_of('PlayArea')
-	local $cover = GetConf('cover')
-	local $f = GetSize_of('font')
-	local $wimg
-	local $wtitle
-	if $cover <> "" Then
-		$wimg = PNG($cover,0,0,$d[2],$d[3])
-	Else
-		$wtitle = GUICtrlCreateLabel( _StringProper (GetConf('title')) ,0,0,$d[2],$d[3], $SS_CENTER + $SS_CENTERIMAGE)
-		GUICtrlSetColor($wtitle,0xCBCBCB)
-		GUICtrlSetFont($wtitle,$f[0]*2,700)
-		GUICtrlSetBkColor($wtitle,"0x"&GetConf('bgcolor'))
-	Endif
-		Sleep(GetConf('wait')*1000)
-		if $wtitle<>0 Then GUICtrlDelete($wtitle)
-		if $wimg<>0 Then GUICtrlDelete($wimg)
-EndFunc
 
 Func LoadConfig($file='scenario.ini',$reset=0)
 
@@ -232,6 +26,7 @@ Func LoadConfig($file='scenario.ini',$reset=0)
 	local $hbtn_width = 120
 	local $bgdialog = @ScriptDir&"\prop\dialog.png"
 	local $bgcolor = "111111"
+	local $sbbgcolor = "222222"
 	local $tcolor = "AAAAAA"
 	local $hcolor = "FFF0FF"
 
@@ -261,15 +56,14 @@ Func LoadConfig($file='scenario.ini',$reset=0)
 
 		Switch $conf[$i][0]
 
+		Case 'sbbgcolor'
+			$sbbgcolor = $conf[$i][1]
 		Case 'bgcolor'
 			$bgcolor = $conf[$i][1]
 		Case 'tcolor'
 			$tcolor = $conf[$i][1]
 		Case 'hcolor'
 			$hcolor = $conf[$i][1]
-
-		case 'splash'
-			$aConf = _ArrayReplace($aConf,'splash' &"|" & $conf[$i][1] )
 
 		case 'width'
 			$width=$conf[$i][1]
@@ -321,6 +115,7 @@ Func LoadConfig($file='scenario.ini',$reset=0)
 	$aConf = _ArrayReplace($aConf,'title' &"|" & $title )
 	$aConf = _ArrayReplace($aConf,'keyword' &"|" & $keyword )
 	$aConf = _ArrayReplace($aConf,'bgcolor' &"|" & $bgcolor )
+	$aConf = _ArrayReplace($aConf,'sbbgcolor' &"|" & $sbbgcolor )
 	$aConf = _ArrayReplace($aConf,'tcolor' &"|" & $tcolor )
 	$aConf = _ArrayReplace($aConf,'hcolor' &"|" & $hcolor )
 	$aConf = _ArrayReplace($aConf,'bgdialog' &"|" & $bgdialog )
@@ -387,30 +182,224 @@ Func GetDimension_of($subject='Desktop')
 
 EndFunc
 
-Func Init_Win($inifile)
+Func ResetParam()
+	$aDisposal = ClearingGUICtrl($aDisposal)
+	Dim $dpng[0]
+	Dim $scene
+EndFunc
+
+Func _ArrayReplace($array, $values)
+
+	local $s = StringSplit($values,"|")
+	local $i = _ArraySearch($array, StringStripWS($s[1],7),0,0 )
+	if $i>-1 Then _ArrayDelete($array,$i)
+
+	_ArrayAdd($array,$values)
+
+	return $array
+
+Endfunc
+
+Func calc_height($fz,$md,$txt='')
+	local $n = Ceiling( StringLen($txt) / 110)
+	if $n < 1 Then $n=1
+	local $height = $n * $fz
+	return $height
+EndFunc
+
+Func ClearingGUICtrl($dismiss)
+	for $i = 0 to Ubound($dismiss)-1
+		GUICtrlDelete($dismiss[$i])
+	Next
+	local $d[0]
+	return $d
+EndFunc
+
+Func GIF($file,$left=0,$top=0,$width=-1,$height=-1)
+	local $hGIF = _GUICtrlCreateGIF($file, "", $left, $top, $width, $height,1)
+	return $hGif
+EndFunc
+
+Func PNG($file,$pl=0,$pt=0,$pw=0,$ph=0,$tm=1)
+	local $extm = Default
+	local $stm = $SS_CENTERIMAGE
+	if $tm==1 Then
+		$extm = $WS_EX_TOPMOST
+		$stm = $SS_NOTIFY
+	Endif
+
+	local $Picpng = GUICtrlCreatePic('',$pl,$pt,$pw,$ph,$stm,$extm)
+	_SetImage($Picpng,$file)
+
+	if $tm==1 Then
+		GUICtrlSetCursor($Picpng,0)
+	Else
+		GUICtrlSetState($Picpng,$GUI_DISABLE)
+	EndIf
+	return $Picpng
+EndFunc
+
+Func GetDir($sFilePath)
+
+	Local $aFolders = StringSplit($sFilePath, "\")
+	Local $iArrayFoldersSize = UBound($aFolders)
+	Local $FileDir = ""
+
+	If (Not IsString($sFilePath)) Then
+		Return SetError(1, 0, -1)
+	EndIf
+
+	$aFolders = StringSplit($sFilePath, "\")
+	$iArrayFoldersSize = UBound($aFolders)
+
+	For $i = 1 To ($iArrayFoldersSize - 2)
+		$FileDir &= $aFolders[$i] & "\"
+	Next
+
+	Return $FileDir
+
+EndFunc
+
+Func _DeskTopVisibleArea()
+	Local $aInfo[2]
+	Local $aCPos = ControlGetPos('[CLASS:Shell_TrayWnd]', '', '')
+	If IsArray($aCPos) <= 0 Then
+		$aInfo[0] = @DesktopWidth
+		$aInfo[1] = @DesktopHeight
+	ElseIf $aCPos[2] >= @DesktopWidth Then
+		$aInfo[0] = @DesktopWidth
+		$aInfo[1] = @DesktopHeight - ($aCPos[3] - $aCPos[1])
+	Else
+		$aInfo[0] = @DesktopWidth - ($aCPos[2] - $aCPos[0])
+		$aInfo[1] = @DesktopHeight
+	EndIf
+	Return $aInfo
+EndFunc
+
+Func ReSize($m=0)
+	local $s = GetDimension_of('ScoreBar')
+	local $f = GetSize_of('font')
+	local $d = GetDimension_of('PlayArea')
+	local $p = WinGetPos($hWin)
+
+;	local $ws = WinGetState($hWin,"")
+
+	if $d[2]=="" Then $d[2] = 800
+	if $d[3]=="" Then $d[3] = 480
+	$d[0] = $p[2]/2 - $d[2]/2
+	$d[1] = $p[3]/2 - $d[3]/2 - 16
+	if $d[0]<0 Then $d[0]=0
+	if $d[1]<0 Then $d[1]=0
+	WinMove ( $hSB,"",$d[0],$d[1]-(3*$f[0])-($f[0]/2))
+	if $hPA<>"" Then
+		WinMove ( $hPA,"",$d[0],$d[1])
+		GUICtrlSetState($hPA, $GUI_FOCUS)
+	Endif
+
+EndFunc
+
+Func AppClose()
+	GUIDelete($hWin)
+	Exit
+EndFunc
+
+Func RunOnce()
+
+	if Not FileExists(@Scriptdir&"/prop") Then DirCreate(@Scriptdir&"/prop")
+
+	if Not FileExists(@ScriptDir&"\prop\scorebar.png") Then FileInstall("1\scorebar.pn_",@ScriptDir&"\prop\scorebar.png",0)
+	if Not FileExists(@ScriptDir&"\prop\grinfico.jpg") Then FileInstall("1\grinfico.jp_",@ScriptDir&"\prop\grinfico.jpg",0)
+	if Not FileExists(@ScriptDir&"\prop\dialog.png") Then FileInstall("1\dialog.pn_",@ScriptDir&"\prop\dialog.png",0)
+	if Not FileExists(@ScriptDir&"\prop\Clear Sans.ttf") Then FileInstall("1\Clear Sans.tt_",@ScriptDir&"\prop\Clear Sans.ttf",0)
+	if Not FileExists(@ScriptDir&"\prop\global.ini") Then FileInstall("1\global.in_",@ScriptDir&"\prop\global.ini",0)
+
+	if Not FileExists(@TempDir&"\grinfico") Then
+		DirCreate(@TempDir&"\grinfico")
+	Else
+		DirRemove(@TempDir&"\grinfico",1)
+		DirCreate(@TempDir&"\grinfico")
+	EndIf
+
+	Dim $Playdir = @TempDir&"\grinfico"
+
+	if Not FileExists(@MyDocumentsDir&"\grinfico")==0 Then DirCreate(@MyDocumentsDir&"\grinfico")
+	if Not FileExists(@MyDocumentsDir&"\grinfico\pack")==0 Then DirCreate(@MyDocumentsDir&"\grinfico\pack")
+	if Not FileExists(@MyDocumentsDir&"\grinfico\saved")==0 Then DirCreate(@MyDocumentsDir&"\grinfico\saved")
+
+	LoadConfig(@ScriptDir&"\prop\global.ini",1)
+
+EndFunc
+
+Func About_This()
+	local $txt = _
+		FileGetVersion(@AutoItExe, $FV_PRODUCTNAME)  & _
+		FileGetVersion(@AutoItExe, $FV_PRODUCTVERSION) & @CRLF & _
+		FileGetVersion(@AutoItExe, $FV_FILEDESCRIPTION) & @CRLF & @CRLF & _
+		FileGetVersion(@AutoItExe, $FV_COMMENTS) & @CRLF & @CRLF & _
+		"Made with AutoIt "& @AutoItVersion & _
+		""
+	Msgbox($MB_TASKMODAL,'Grinfico',$txt,0,$hWin)
+EndFunc
+
+Func DebugArray($array,$n=1)
+	if @Compiled==0 Then
+	for $i=0 to UBound($array)-1
+		ConsoleWrite($array[$i][0] & @TAB&"= ")
+		local $res =''
+		for $c=1 to $n
+			$res = $res & $array[$i][$c] & ","
+		Next
+		$res = StringTrimRight($res,1)
+		ConsoleWrite($res&@CRLF)
+	Next
+	ConsoleWrite(@CRLF)
+	Endif
+EndFunc
+
+Func WelcomeTitle()
+	local $d = GetDimension_of('PlayArea')
+	local $cover = GetConf('cover')
+	local $f = GetSize_of('font')
+	local $wimg
+	local $wtitle
+	if $cover <> "" Then
+		$wimg = PNG($cover,0,0,$d[2],$d[3])
+	Else
+		$wtitle = GUICtrlCreateLabel( _StringProper (GetConf('title')) ,0,0,$d[2],$d[3], $SS_CENTER + $SS_CENTERIMAGE)
+		GUICtrlSetColor($wtitle,0xCBCBCB)
+		GUICtrlSetFont($wtitle,$f[0]*2,700)
+		GUICtrlSetBkColor($wtitle,"0x"&GetConf('bgcolor'))
+	Endif
+		Sleep(GetConf('wait')*1000)
+		if $wtitle<>0 Then GUICtrlDelete($wtitle)
+		if $wimg<>0 Then GUICtrlDelete($wimg)
+EndFunc
+
+Func Init_Win($file)
 	local $d = GetDimension_of('Desktop')
 	$hWin = GUICreate("Grinfico",$d[2],$d[3],$d[0],$d[1],$WS_SYSMENU+$WS_MINIMIZEBOX+$WS_MAXIMIZEBOX+$WS_SIZEBOX)
-	GUISetBkColor(0x222222,$hWin)
+	GUISetBkColor("0x"&GetConf('bgcolor'),$hWin)
 	GUISetFont(11,400,Default,"Tahoma",$hWin,5)
 	local $menu_file = GUICtrlCreateMenu("&File",-1)
 	local $menu_book = GUICtrlCreateMenu("&Story",-1)
 	local $menu_help = GUICtrlCreateMenu("&Info",-1)
 	_ArrayAdd( $hMenu, $menu_file &"|"& "" &"|"& "" )
-	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("&Open",$menu_file)	&"|"&	"PackBrowse"	&"|"& @MyDocumentsDir&"/grinfico/pack")
+	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("&Open",$menu_file)	&"|"&	"PackBrowse"	&"|"& @MyDocumentsDir&"\grinfico\pack")
 	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("&Close",$menu_file)	&"|"&	"PackClose"	&"|"& "" )
+	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("&Keys",$menu_file)	&"|"&	"KeyFold"	&"|"& "" )
+	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("",$menu_file)	&"|"&	""	&"|"& "" )
 	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("E&xit",$menu_file)	&"|"&	"AppClose"	&"|"& "" )
 	_ArrayAdd( $hMenu, $menu_book &"|"& "" &"|"& "" )
 	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("&Load",$menu_book)	&"|"&	"Story_load"	&"|"& "" )
 	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("&Save",$menu_book)	&"|"&	"Story_save"	&"|"& "" )
-	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("&Restart",$menu_book)	&"|"&	"Story_restart"	&"|"& $inifile )
+	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("&Restart",$menu_book)	&"|"&	"Story_restart"	&"|"& $file )
 	_ArrayAdd( $hMenu, $menu_help &"|"& "" &"|"& "" )
 	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("&About",$menu_help)	&"|"&	"About_This"	&"|"& "" )
-	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("&Logo",$menu_help)	&"|"&	"SplashMe"	&"|"& "" )
 
-	$label = GUICtrlCreatePic(@Scriptdir&"\prop\grinfico.jpg",$d[2]/2-140,$d[3]/2-150,280,300)
+	$label = GUICtrlCreatePic(@Scriptdir&"\prop\grinfico.jpg",$d[2]/2-75,$d[3]/2-110,150,220)
+	_ArrayAdd($aDisposal, $label)
+
 	GuiSetState(@SW_SHOW,$hWin)
-	Sleep(2000)
-	GUICtrlDelete($label)
 
 EndFunc
 
@@ -418,7 +407,7 @@ Func Init_ScoreBar()
 	local $d = GetDimension_of('ScoreBar')
 	local $f = GetSize_of('font')
 	$hSB = GUICreate("ScoreBar",$d[2],$d[3],$d[0],$d[1], BitOR($WS_CHILD,$WS_BORDER),$WS_EX_TOPMOST, $hWin)
-	GUISetBkColor(0x331111,$hSB)
+	GUISetBkColor("0x"&GetConf('sbbgcolor'),$hSB)
 	GUISetFont($f[0]*.85,700,Default,GetConf('fontname'),$hSB,5)
 	PNG(@ScriptDir&"\prop\scorebar.png",0,0,$d[2],$d[3],0)
 	local $cw = 40
@@ -466,3 +455,49 @@ Func ShakePlayarea($n=2)
 	GUICtrlSetState($hPA, $GUI_FOCUS)
 
 Endfunc
+
+Func FP_deCrypt($sSourceRead)
+	local $res
+	If _Crypt_DecryptFile($sSourceRead, $PlayDir&"\_play.zip", "actioposs", $CALG_AES_256) Then ; Decrypt the file.
+		$res=true
+		;MsgBox($MB_SYSTEMMODAL, "Success", "Operation succeeded.")
+	Else
+		$res=false
+		Switch @error
+			Case 1
+				MsgBox($MB_SYSTEMMODAL, "Error", "Failed to create the key.")
+			Case 2
+				MsgBox($MB_SYSTEMMODAL, "Error", "Couldn't open the source file.")
+			Case 3
+				MsgBox($MB_SYSTEMMODAL, "Error", "Couldn't open the destination file.")
+			Case 4 Or 5
+				MsgBox($MB_SYSTEMMODAL, "Error", "Decryption error.")
+		EndSwitch
+	EndIf
+
+	return $res
+
+Endfunc
+
+Func FP_enCrypt($sSourceRead)
+
+	If _Crypt_EncryptFile($sSourceRead, $sDestinationRead, $sPasswordRead, $iAlgorithm) Then ; Encrypt the file.
+		MsgBox($MB_SYSTEMMODAL, "Success", "Operation succeeded.")
+	Else
+		Switch @error
+			Case 1
+				MsgBox($MB_SYSTEMMODAL, "Error", "Failed to create the key.")
+			Case 2
+				MsgBox($MB_SYSTEMMODAL, "Error", "Couldn't open the source file.")
+			Case 3
+				MsgBox($MB_SYSTEMMODAL, "Error", "Couldn't open the destination file.")
+			Case 4 Or 5
+				MsgBox($MB_SYSTEMMODAL, "Error", "Encryption error.")
+		EndSwitch
+	EndIf
+
+Endfunc
+
+Func KeyFold()
+	ShellExecute(@MyDocumentsDir&"\grinfico")
+EndFunc

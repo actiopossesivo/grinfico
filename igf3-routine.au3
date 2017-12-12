@@ -21,6 +21,8 @@ Func SectionThread($section, $param='')
 
 	if @compiled==0 Then ConsoleWrite("Section"&@TAB&"= "&$Section&"("&$current&"/"&Ubound($Sections)-1&")"&@CRLF)
 
+	GUICtrlSetState($hMenu[8][0],$GUI_DISABLE) ; Can't Save
+
 	for $i = 0 to Ubound($opt)-1
 		Switch StringLower($opt[$i][0])
 
@@ -51,6 +53,8 @@ Func SectionThread($section, $param='')
 				$dpng = ClearingGUICtrl($dpng)
 				GUICtrlDelete($scene)
 				$scene = PNG($opt[$i][1], 0,0,$d[2],$d[3],0)
+				$Last_Section = $section
+				GUICtrlSetState($hMenu[8][0],$GUI_ENABLE) ; Can Save
 
 			Case "png"
 				_ArrayAdd($gpng,$opt[$i][1],0,"|")
@@ -73,16 +77,17 @@ Func SectionThread($section, $param='')
 					$value = $aa[0]
 				Endif
 
-				if CheckBeen($section)==false Then
+				if _ArraySearch($aBeen,$section) == -1 Then
 					_ArrayAdd($aBeen,$section)
-					if @compiled==0 Then ConsoleWrite( "+++ Score(" & $addto &"/"& $section &") : "& $value & @CRLF )
-					Scoring("set",$addto,$value)
+					if @compiled==0 Then ConsoleWrite( "Score"&@TAB&"(" & $addto &"/"& $section &") : "& $value & @CRLF )
+					Scoring("add",$addto,$value)
 				Endif
 
 		EndSwitch
 	Next
 
 	DebugArray($aScore,3)
+	local $b
 
 	if Ubound($gpng)>0 Then
 		$dpng = ClearingGUICtrl($dpng)
@@ -116,10 +121,17 @@ Func SectionThread($section, $param='')
 
 EndFunc
 
-Func Scoring($sw='set',$subject='score', $value=0)
+Func Scoring($sw='add',$subject='score', $value=0)
 	local $i = _ArraySearch($aScore, StringLower($subject))
+	if $i>-1 Then
 	Switch $sw
 		case "set"
+			$aScore[$i][2]=$value
+			if $aScore[$i][1]<>"" Then
+				GUICtrlSetData($aScore[$i][1], $aScore[$i][2])
+				return $aScore[$i][2]
+			Endif
+		case "add"
 			$aScore[$i][2]=$aScore[$i][2] + $value
 			if $aScore[$i][1]<>"" Then
 				GUICtrlSetData($aScore[$i][1], $aScore[$i][2])
@@ -129,14 +141,24 @@ Func Scoring($sw='set',$subject='score', $value=0)
 		case "get"
 			return $aScore[$i][2]
 	EndSwitch
+	Endif
 
 EndFunc
 
-Func CheckBeen($section)
-	local $been = _ArrayUnique($aBeen)
-	local $pass = false
-	if  _ArraySearch($been,$section) > 1 Then  $pass=true
-	return $pass
+Func Text_Next($p1,$p2)
+	$aDisposal = ClearingGUICtrl($aDisposal)
+	return 2
+EndFunc
+
+Func Text_isArray($txt)
+	local $aText = _StringExplode($txt,"::")
+	if Ubound($aText)>1 Then
+		$aText[0] = StringRegExpReplace ( $aText[0], "\s+$", "")
+		$aText[1] = StringRegExpReplace ( $aText[1], "^\s+", "")
+		return $aText
+	Else
+		return $txt
+	EndIf
 EndFunc
 
 Func Text($top,$txt,$goto)
@@ -158,7 +180,7 @@ Func Text($top,$txt,$goto)
 			_ArrayAdd($aDisposal,$ah)
 		Endif
 		local $ta = GUICtrlCreateLabel($aTxt[0], $d[0], $d[1]-$add, $d[2], $d[3]+$add )
-		GUICtrlSetColor($ta,0xFF00FF)
+		GUICtrlSetColor($ta,"0x"&GetConf('hcolor'))
 		GUICtrlSetFont($ta,$f[0]*.9,700)
 		GUICtrlSetBkColor($ta,$GUI_BKCOLOR_TRANSPARENT )
 		$txt = StringStripWS($aTxt[1],3)
@@ -168,7 +190,7 @@ Func Text($top,$txt,$goto)
 	Endif
 
 	local $th = GUICtrlCreateLabel($txt,$d[0],$d[1],$d[2],$d[3])
-	GUICtrlSetColor($th,0xFFFFFF)
+	GUICtrlSetColor($th,"0x"&GetConf('tcolor'))
 	GUICtrlSetBkColor($th,$GUI_BKCOLOR_TRANSPARENT)
 	GUICtrlSetFont($th,$f[0],400)
 	_ArrayAdd($aDisposal,$th)
@@ -223,7 +245,7 @@ Func Prompting($hbutton,$vbutton,$spot)
 		Next
 	Endif
 
-	Scoring("set","lapse",1)
+	Scoring("add","lapse",1)
 
 	local $res = GUI_Function($handle)
 
@@ -310,10 +332,10 @@ Func GUIHandle($sw,$click,$handle='')
 
 	Case "win"
 		if	$click[0] == $GUI_EVENT_CLOSE Then AppClose()
+		if	$click[0] == $GUI_EVENT_MAXIMIZE Then ReSize(1)
 		if 	$click[0] == $GUI_EVENT_RESIZED OR _
-			$click[0] == $GUI_EVENT_MAXIMIZE OR _
 			$click[0] == $GUI_EVENT_RESTORE Then
-			ReSize()
+			ReSize(0)
 		EndIf
 		Menu_GetMsg($click[0])
 
