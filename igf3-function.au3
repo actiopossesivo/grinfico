@@ -131,55 +131,48 @@ Func LoadConfig($file='scenario.ini',$reset=0)
 
 EndFunc
 
+Func GetMenuGUI($subject)
+	local $found =''
+	if IsArray($hMenu) Then
+		if $subject<>"" Then
+			local $i = _ArraySearch($hMenu, StringLower($subject))
+			if $i>-1 Then $found = $hMenu[$i][1]
+		Endif
+		return $found
+	Endif
+EndFunc
+
 Func GetConf($subject='fontname')
-
 	local $found=""
-
 	if IsArray($aConf) Then
-
-	if $subject<>"" Then
-		local $i = _ArraySearch($aConf, StringLower($subject))
-		if $i>-1 Then  $found = $aConf[$i][1]
+		if $subject<>"" Then
+			local $i = _ArraySearch($aConf, StringLower($subject))
+			if $i>-1 Then  $found = $aConf[$i][1]
+		Endif
 	Endif
-
-	Endif
-
 	return $found
-
 EndFunc
 
 Func GetSize_of($subject='font')
-
 	Local $found[0]
-
 	if IsArray($aSize) Then
-
 	if $subject<>"" Then
 		local $i = _ArraySearch($aSize, StringLower($subject))
 		if $i>-1 Then Dim $found[] = [ $aSize[$i][1], $aSize[$i][2] ]
 	Endif
-
 	Endif
-
 	return $found
-
 EndFunc
 
 Func GetDimension_of($subject='Desktop')
-
 	Local $found[0]
-
 	if IsArray($aDimension) Then
-
 	if $subject<>"" Then
 		local $i = _ArraySearch($aDimension, StringLower($subject))
 		if $i>-1 Then Dim $found[] = [ $aDimension[$i][1], $aDimension[$i][2], $aDimension[$i][3], $aDimension[$i][4] ]
 	Endif
-
 	EndIf
-
 	return $found
-
 EndFunc
 
 Func ResetParam()
@@ -281,9 +274,6 @@ Func ReSize($m=0)
 	local $f = GetSize_of('font')
 	local $d = GetDimension_of('PlayArea')
 	local $p = WinGetPos($hWin)
-
-;	local $ws = WinGetState($hWin,"")
-
 	if $d[2]=="" Then $d[2] = 800
 	if $d[3]=="" Then $d[3] = 480
 	$d[0] = $p[2]/2 - $d[2]/2
@@ -301,33 +291,6 @@ EndFunc
 Func AppClose()
 	GUIDelete($hWin)
 	Exit
-EndFunc
-
-Func RunOnce()
-
-	if Not FileExists(@Scriptdir&"/prop") Then DirCreate(@Scriptdir&"/prop")
-
-	if Not FileExists(@ScriptDir&"\prop\scorebar.png") Then FileInstall("1\scorebar.pn_",@ScriptDir&"\prop\scorebar.png",0)
-	if Not FileExists(@ScriptDir&"\prop\grinfico.jpg") Then FileInstall("1\grinfico.jp_",@ScriptDir&"\prop\grinfico.jpg",0)
-	if Not FileExists(@ScriptDir&"\prop\dialog.png") Then FileInstall("1\dialog.pn_",@ScriptDir&"\prop\dialog.png",0)
-	if Not FileExists(@ScriptDir&"\prop\Clear Sans.ttf") Then FileInstall("1\Clear Sans.tt_",@ScriptDir&"\prop\Clear Sans.ttf",0)
-	if Not FileExists(@ScriptDir&"\prop\global.ini") Then FileInstall("1\global.in_",@ScriptDir&"\prop\global.ini",0)
-
-	if Not FileExists(@TempDir&"\grinfico") Then
-		DirCreate(@TempDir&"\grinfico")
-	Else
-		DirRemove(@TempDir&"\grinfico",1)
-		DirCreate(@TempDir&"\grinfico")
-	EndIf
-
-	Dim $Playdir = @TempDir&"\grinfico"
-
-	if Not FileExists(@MyDocumentsDir&"\grinfico")==0 Then DirCreate(@MyDocumentsDir&"\grinfico")
-	if Not FileExists(@MyDocumentsDir&"\grinfico\pack")==0 Then DirCreate(@MyDocumentsDir&"\grinfico\pack")
-	if Not FileExists(@MyDocumentsDir&"\grinfico\saved")==0 Then DirCreate(@MyDocumentsDir&"\grinfico\saved")
-
-	LoadConfig(@ScriptDir&"\prop\global.ini",1)
-
 EndFunc
 
 Func About_This()
@@ -380,24 +343,12 @@ Func Init_Win($file)
 	$hWin = GUICreate("Grinfico",$d[2],$d[3],$d[0],$d[1],$WS_SYSMENU+$WS_MINIMIZEBOX+$WS_MAXIMIZEBOX+$WS_SIZEBOX)
 	GUISetBkColor("0x"&GetConf('bgcolor'),$hWin)
 	GUISetFont(11,400,Default,"Tahoma",$hWin,5)
-	local $menu_file = GUICtrlCreateMenu("&File",-1)
-	local $menu_book = GUICtrlCreateMenu("&Story",-1)
-	local $menu_help = GUICtrlCreateMenu("&Info",-1)
-	_ArrayAdd( $hMenu, $menu_file &"|"& "" &"|"& "" )
-	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("&Open",$menu_file)	&"|"&	"PackBrowse"	&"|"& @MyDocumentsDir&"\grinfico\pack")
-	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("&Close",$menu_file)	&"|"&	"PackClose"	&"|"& "" )
-	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("&Keys",$menu_file)	&"|"&	"KeyFold"	&"|"& "" )
-	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("",$menu_file)	&"|"&	""	&"|"& "" )
-	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("E&xit",$menu_file)	&"|"&	"AppClose"	&"|"& "" )
-	_ArrayAdd( $hMenu, $menu_book &"|"& "" &"|"& "" )
-	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("&Load",$menu_book)	&"|"&	"Story_load"	&"|"& "" )
-	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("&Save",$menu_book)	&"|"&	"Story_save"	&"|"& "" )
-	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("&Restart",$menu_book)	&"|"&	"Story_restart"	&"|"& $file )
-	_ArrayAdd( $hMenu, $menu_help &"|"& "" &"|"& "" )
-	_ArrayAdd( $hMenu, GUICtrlCreateMenuItem("&About",$menu_help)	&"|"&	"About_This"	&"|"& "" )
 
+	$hMenu = igf_menus($file)
 	$label = GUICtrlCreatePic(@Scriptdir&"\prop\grinfico.jpg",$d[2]/2-75,$d[3]/2-110,150,220)
 	_ArrayAdd($aDisposal, $label)
+
+	;_ArrayDisplay($hMenu)
 
 	GuiSetState(@SW_SHOW,$hWin)
 
@@ -455,49 +406,3 @@ Func ShakePlayarea($n=2)
 	GUICtrlSetState($hPA, $GUI_FOCUS)
 
 Endfunc
-
-Func FP_deCrypt($sSourceRead)
-	local $res
-	If _Crypt_DecryptFile($sSourceRead, $PlayDir&"\_play.zip", "actioposs", $CALG_AES_256) Then ; Decrypt the file.
-		$res=true
-		;MsgBox($MB_SYSTEMMODAL, "Success", "Operation succeeded.")
-	Else
-		$res=false
-		Switch @error
-			Case 1
-				MsgBox($MB_SYSTEMMODAL, "Error", "Failed to create the key.")
-			Case 2
-				MsgBox($MB_SYSTEMMODAL, "Error", "Couldn't open the source file.")
-			Case 3
-				MsgBox($MB_SYSTEMMODAL, "Error", "Couldn't open the destination file.")
-			Case 4 Or 5
-				MsgBox($MB_SYSTEMMODAL, "Error", "Decryption error.")
-		EndSwitch
-	EndIf
-
-	return $res
-
-Endfunc
-
-Func FP_enCrypt($sSourceRead)
-
-	If _Crypt_EncryptFile($sSourceRead, $sDestinationRead, $sPasswordRead, $iAlgorithm) Then ; Encrypt the file.
-		MsgBox($MB_SYSTEMMODAL, "Success", "Operation succeeded.")
-	Else
-		Switch @error
-			Case 1
-				MsgBox($MB_SYSTEMMODAL, "Error", "Failed to create the key.")
-			Case 2
-				MsgBox($MB_SYSTEMMODAL, "Error", "Couldn't open the source file.")
-			Case 3
-				MsgBox($MB_SYSTEMMODAL, "Error", "Couldn't open the destination file.")
-			Case 4 Or 5
-				MsgBox($MB_SYSTEMMODAL, "Error", "Encryption error.")
-		EndSwitch
-	EndIf
-
-Endfunc
-
-Func KeyFold()
-	ShellExecute(@MyDocumentsDir&"\grinfico")
-EndFunc

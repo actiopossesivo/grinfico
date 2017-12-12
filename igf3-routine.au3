@@ -21,7 +21,7 @@ Func SectionThread($section, $param='')
 
 	if @compiled==0 Then ConsoleWrite("Section"&@TAB&"= "&$Section&"("&$current&"/"&Ubound($Sections)-1&")"&@CRLF)
 
-	GUICtrlSetState($hMenu[8][0],$GUI_DISABLE) ; Can't Save
+	GUICtrlSetState(GetMenuGUI("save"),$GUI_DISABLE) ; Can't Save
 
 	for $i = 0 to Ubound($opt)-1
 		Switch StringLower($opt[$i][0])
@@ -54,7 +54,7 @@ Func SectionThread($section, $param='')
 				GUICtrlDelete($scene)
 				$scene = PNG($opt[$i][1], 0,0,$d[2],$d[3],0)
 				$Last_Section = $section
-				GUICtrlSetState($hMenu[8][0],$GUI_ENABLE) ; Can Save
+				GUICtrlSetState(GetMenuGUI("save"),$GUI_ENABLE) ; Can Save
 
 			Case "png"
 				_ArrayAdd($gpng,$opt[$i][1],0,"|")
@@ -355,8 +355,8 @@ EndFunc
 
 Func Menu_GetMsg($click)
 	For $i = 0 to Ubound($hMenu)-1
-		if $click == $hMenu[$i][0] Then
-			Call($hMenu[$i][1],$hMenu[$i][2])
+		if $click == $hMenu[$i][1] Then
+			Call($hMenu[$i][2],$hMenu[$i][3])
 		Endif
 	Next
 EndFunc
