@@ -69,7 +69,7 @@ Func SetKey($s)
 	local $sk = FileReadLine($fo)
 	FileClose($fo)
 	Dim $igf_passkey = StringEncrypt(False, $sk, 'actiopossesivo')
-	if @Compiled==0 Then ConsoleWrite("Passkey="&@TAB&$igf_passkey)
+	if @Compiled==0 Then ConsoleWrite("key"&@TAB&"= "&$igf_passkey)
 EndFunc
 
 func igf_menus($file)
@@ -227,12 +227,16 @@ Func FP_deCrypt($sSourceRead)
 		Switch @error
 			Case 1
 				MsgBox($MB_SYSTEMMODAL, "Error", "Failed to create the key.")
+				exit
 			Case 2
 				MsgBox($MB_SYSTEMMODAL, "Error", "Couldn't open the source file.")
+				exit
 			Case 3
 				MsgBox($MB_SYSTEMMODAL, "Error", "Couldn't open the destination file.")
+				exit
 			Case 4 Or 5
 				MsgBox($MB_SYSTEMMODAL, "Error", "Decryption error.")
+				exit
 		EndSwitch
 	EndIf
 

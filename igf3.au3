@@ -7,8 +7,8 @@
 #pragma compile(Icon, C:\igf\1\icon.ico)
 #pragma compile(Compatibility, vista, win7, win8, win81, win10)
 #pragma compile(FileDescription, an Interactive Fictions Engine)
-#pragma compile(ProductName, Grinfinco)
-#pragma compile(ProductVersion, 1.3)
+#pragma compile(ProductName, Grinfico)
+#pragma compile(ProductVersion, 1.4)
 #pragma compile(Comments,'https://github.com/actiopossesivo/igfiction')
 
 Global $hWin
