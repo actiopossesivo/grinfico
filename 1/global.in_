@@ -1,0 +1,15 @@
+[config]
+splash=yes
+fontname=Clear Sans
+fontsize=11
+width=800
+height=480
+vbtn_width=360
+hbtn_width=150
+bgcolor=000033
+hcolor=ff00ff
+tcolor=dddddd
+welcome_wait=2
+
+scores=score||0|Score|FFCC33
+scores=lapse||0||CCCCCC
