@@ -8,12 +8,12 @@
 #include <Array.au3>
 #include <String.au3>
 #include <GuiMenu.au3>
-#include <File.au3>
 #include <Crypt.au3>
 
 #Include <lib/Icons.au3>
 #include <lib/GIFAnimation.au3>
 #Include <lib/_Zip.au3>
+#Include <lib/wmp.au3>
 
 Opt('WINTITLEMATCHMODE', 4)
 
@@ -63,7 +63,7 @@ Func LoadConfig($file='scenario.ini',$reset=0)
 
 		Case 'sbbgimg'
 			$sbbgimg = $conf[$i][1]
-			if FileExists($f) Then $sbbgimg = @WorkingDir&"\"&$conf[$i][1]
+			if FileExists($sbbgimg) Then $sbbgimg = $conf[$i][1]
 		Case 'bgcolor'
 			$bgcolor = $conf[$i][1]
 		Case 'tcolor'
@@ -219,6 +219,21 @@ EndFunc
 Func GIF($file,$left=0,$top=0,$width=-1,$height=-1)
 	local $hGIF = _GUICtrlCreateGIF($file, "", $left, $top, $width, $height,1)
 	return $hGif
+EndFunc
+
+Func VID($video,$left=0,$top=0,$width=0,$height=0)
+	if $width == 0 Then $width = $pa_width
+	if $height == 0 Then $height = $pa_vidheight
+	local $res = _wmpcreate(1, $left, $top, $width, $height)
+	$ovid = $res[0]
+	$oovid = $res[1]
+	_wmpvalue($ovid, "nocontrols")
+	_wmploadmedia($ovid, $video)
+	With $ovid
+		.windowlessVideo = True
+		.stretchToFit = True
+	EndWith
+	return $oovid
 EndFunc
 
 Func PNG($file,$pl=0,$pt=0,$pw=0,$ph=0,$tm=1)

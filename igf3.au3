@@ -3,7 +3,7 @@
 #include <igf3-files.au3>
 #include <igf3-routine.au3>
 
-#pragma compile(Out, compiled\Grinfico.exe)
+#pragma compile(Out, Grinfico.exe)
 #pragma compile(Icon, C:\igf\1\icon.ico)
 #pragma compile(Compatibility, vista, win7, win8, win81, win10)
 #pragma compile(FileDescription, an Interactive Fictions Engine)
@@ -22,6 +22,7 @@ Global $aScore[0][5]
 Global $aBeen[0]
 Global $aDisposal[0]
 Global $dpng[0]
+Global $dgif[0]
 Global $scene
 Global $Playdir
 Global $Last_Section = ''
@@ -43,6 +44,9 @@ if $CmdLine[0]>0 Then
 Endif
 
 Init_Win($inifile)
+
 if ($inifile <> "") Then PackOpen($inifile)
+
 GUI_Function("")
+
 Exit

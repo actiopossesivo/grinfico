@@ -26,11 +26,22 @@ Func SectionThread($section, $param='')
 	for $i = 0 to Ubound($opt)-1
 		Switch StringLower($opt[$i][0])
 
+			Case "beep"
+				local $b = StringSplit($opt[$i][1],"|")
+				if Ubound($b)>=3 Then
+					if $b[1]=="" Then $b[1]=900
+					if $b[2]=="" Then $b[2]=150
+					beep($b[1],$b[2])
+				Else
+					beep(900,150)
+				Endif
+
 			Case "shake"
-				$shake=$opt[$i][1]
+				$shake =Number($opt[$i][1])
 
 			Case "wait"
-				$wait=$opt[$i][1]
+				$wait = Number($opt[$i][1])
+				if @Compiled==0 Then ConsoleWrite("VAL="&$opt[$i][1]&@CRLF)
 
 			Case "condition"
 				local $cond = StringSplit($opt[$i][1],"|")
@@ -51,13 +62,24 @@ Func SectionThread($section, $param='')
 
 			Case "scene"
 				$dpng = ClearingGUICtrl($dpng)
+				$dgif = ClearingGUICtrl($dgif)
 				GUICtrlDelete($scene)
 				$scene = PNG($opt[$i][1], 0,0,$d[2],$d[3],0)
 				$Last_Section = $section
 				GUICtrlSetState(GetMenuGUI("save"),$GUI_ENABLE) ; Can Save
 
+			case "mp3"
+				if FileExists($opt[$i][1]) Then
+					SoundPlay($opt[$i][1],0)
+				Endif
+
+			case "vid"
+				_ArrayAdd($gvid,$opt[$i][1],0,"|")
+			Case "gif"
+				_ArrayAdd($ggif,$opt[$i][1],0,"|")
 			Case "png"
 				_ArrayAdd($gpng,$opt[$i][1],0,"|")
+
 			Case "text"
 				_ArrayAdd($gtext,$opt[$i][1])
 
@@ -97,11 +119,30 @@ Func SectionThread($section, $param='')
 		Next
 	Endif
 
+	if Ubound($ggif)>0 Then
+		$dgif = ClearingGUICtrl($dgif)
+		for $i = 0 to Ubound($ggif)-1
+			local $pic = GIF($ggif[$i][0],$ggif[$i][1],$ggif[$i][2],$ggif[$i][3],$ggif[$i][4])
+			_ArrayAdd($dgif,$pic)
+		Next
+	Endif
+
+	if Ubound($gvid)>0 Then
+		$dgif = ClearingGUICtrl($dgif)
+		$i=0
+		local $pic = VID($gvid[$i][0],$gvid[$i][1],$gvid[$i][2],$gvid[$i][3],$gvid[$i][4])
+		_ArrayAdd($dgif,$pic)
+	Endif
+
 	local $nonpage=0
 	if Ubound($ghbutton)>-1 OR Ubound($gvbutton)>-1 OR Ubound($gspot)>-1 Then $nonpage=1
 
 	if $shake>0 then ShakePlayarea($shake)
-	if $wait>0 then Sleep($wait*1000)
+
+	if $wait > 0  then
+		if @Compiled==0 Then ConsoleWrite("wait="&$wait * 1000&@CRLF)
+		Sleep($wait*1000)
+	Endif
 
 	if Ubound($gtext)>-1 Then
 		local $r
@@ -135,7 +176,6 @@ Func Scoring($sw='add',$subject='score', $value=0)
 			$aScore[$i][2]=$aScore[$i][2] + $value
 			if $aScore[$i][1]<>"" Then
 				GUICtrlSetData($aScore[$i][1], $aScore[$i][2])
-				if $subject=='score' Then beep(888,200)
 				return $aScore[$i][2]
 			Endif
 		case "get"
@@ -163,6 +203,8 @@ EndFunc
 
 Func Text($top,$txt,$goto)
 	local $tb = PNG(GetConf('bgdialog'),-1,-1,1,1,1)
+	GUICtrlSetBkColor($tb,$GUI_BKCOLOR_TRANSPARENT )
+
 	local $d = GetDimension_of('inside')
 	local $f = GetSize_of('font')
 	local $handle[0][4]
@@ -175,8 +217,9 @@ Func Text($top,$txt,$goto)
 
 	if IsArray($aTxt) Then
 		$add = $f[1]
-		if FileExists($aTxt[0]&"-head.png") Then
-			$ah = PNG($aTxt[0]&"-head.png",$d[0]-$f[0],$d[1]-$add-64-$f[0],64,64,0)
+		if FileExists($aTxt[0]&"-icon.png") Then
+			$ah = PNG($aTxt[0]&"-icon.png",$d[0]-$f[0],$d[1]-$add-64-$f[0],64,64,0)
+			GUICtrlSetBkColor($ah,$GUI_BKCOLOR_TRANSPARENT )
 			_ArrayAdd($aDisposal,$ah)
 		Endif
 		local $ta = GUICtrlCreateLabel($aTxt[0], $d[0], $d[1]-$add, $d[2], $d[3]+$add )
@@ -236,6 +279,7 @@ Func Prompting($hbutton,$vbutton,$spot)
 
 	if $S>0 Then
 		for $i = 0 to $S-1
+			;local $sres = GUICtrlCreateLabel("",$spot[$i][1],$spot[$i][2],$spot[$i][3],$spot[$i][4],$SS_GRAYFRAME)
 			local $sres = GUICtrlCreateLabel("",$spot[$i][1],$spot[$i][2],$spot[$i][3],$spot[$i][4])
 			GUICtrlSetCursor($sres,0)
 			GUICtrlSetBkColor($sres,$GUI_BKCOLOR_TRANSPARENT)

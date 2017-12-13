@@ -1,3 +1,5 @@
+#include <File.au3>
+
 Func RunOnce()
 
 	if Not FileExists(@Scriptdir&"/prop") Then DirCreate(@Scriptdir&"/prop")
@@ -91,7 +93,9 @@ func igf_menus($file)
 	_ArrayAdd( $hMenu, "restart" &"|"& GUICtrlCreateMenuItem("&Restart",$menu_book)&"|"&"Story_restart"&"|"& $file )
 	_ArrayAdd( $hMenu, "" &"|"& $menu_help &"|"& "" &"|"& "" )
 	_ArrayAdd( $hMenu, "about" &"|"& GUICtrlCreateMenuItem("&About",$menu_help)&"|"&"About_This"&"|"& "" )
+
 	igf_keylist()
+
 	return $hMenu
 EndFunc
 
@@ -112,7 +116,9 @@ Func PackBrowse($folder)
 		local $res = FP_deCrypt($sFileOpenDialog)
 		if $res == true Then
 			local $we = _Zip_UnzipAll($Playdir&"\_play.zip", $PlayDir, 20+512)
+			;ConsoleWrite($we & " -- "& $sFileOpenDialog &"->"& $Playdir &@CRLF)
 			PackOpen($PlayDir&"\scenario.ini")
+
 		Endif
 	Endif
 EndFunc
@@ -120,9 +126,11 @@ EndFunc
 Func PackOpen($file)
 	Dim $inifile = $file
 	FileChangeDir(GetDir($inifile));
+
 	GUICtrlSetState(GetMenuGUI('save'),$GUI_ENABLE)
 	GUICtrlSetState(GetMenuGUI('load'),$GUI_ENABLE)
 	GUICtrlSetState(GetMenuGUI('restart'),$GUI_ENABLE)
+
 	LoadConfig($inifile);
 	ResetParam()
 	Init_Scorebar()
@@ -148,7 +156,6 @@ Func Story_save()
 	local $key = GetConf('keyword');
 	local $data[0][2]
 	local $sbeen;
-	local $stamp = @YEAR&@MON&@MDAY&@HOUR&@MIN&@SEC
 
 	; Data Collecting
 
@@ -159,18 +166,18 @@ Func Story_save()
 	$sbeen = StringTrimRight($sbeen,1)
 
 	for $i=0 to Ubound($aScore)-1
+		ConsoleWrite($aScore[$i][0]&@CRLF)
 		_ArrayAdd($data, $aScore[$i][0] &"|"& $aScore[$i][2] )
 	Next
 
+	local $stamp = @YEAR&@MON&@MDAY&@HOUR&@MIN&@SEC
+
 	_ArrayAdd($data, "been" &"|"& $sbeen)
 	_ArrayAdd($data, "section" &"|"& $Last_Section)
-	_ArrayAdd($data, "stamp" &"|"& $stamp)
+	_ArrayAdd($data, "Stamp" &"|"& $stamp)
 
 	$save_file = FilesaveDialog("Grinfico - Saved Files", @MyDocumentsDir&"\grinfico\saved" ,"All (*."&$key&".ini)", $FD_PATHMUSTEXIST+$FD_PROMPTOVERWRITE)
-
-	if $save_file <> "" Then
-		local $r= IniWriteSection ($save_file, "data", $data,0 )
-	Endif
+	local $r= IniWriteSection ($save_file, "data", $data,0 )
 
 	FileChangeDir(GetDir($inifile));
 
@@ -188,23 +195,28 @@ Func Story_load()
 
 	if $sFileOpenDialog<>"" Then
 		local $data = IniReadSection($sFileOpenDialog,"data")
-		local $aS
 
 		; populated data
 
 		PackClose()
+
 		Init_Scorebar()
+
+		local $aS
 		for $i= 0 to Ubound($aScore)-1
 			local $s = $aScore[$i][0];
 			local $n = _ArraySearch($data,$s)
 			Scoring("set",$s,$data[$n][1])
+			;ConsoleWrite($n &"-->"* $i&@CRLF)
 		Next
 
 		For $i=1 to Ubound($data)-1
+			;Scoring("set",$data[$i][0],$data[$i][1]) ; will skip not score?
 			if $data[$i][0] == "been" Then Dim $aBeen = StringSplit($data[$i][1],",")
 			if $data[$i][0] == "section" Then $goto = $data[$i][1]
 		Next
 
+		;_ArrayDisplay($data)
 		FileChangeDir(GetDir($inifile));
 		Init_PlayArea()
 		GUICtrlSetState($hPA, $GUI_FOCUS)
@@ -212,12 +224,14 @@ Func Story_load()
 		SectionThread($goto)
 
 	Endif
+
 EndFunc
 
 Func FP_deCrypt($sSourceRead)
 	local $res
 	If _Crypt_DecryptFile($sSourceRead, $PlayDir&"\_play.zip", $igf_passkey , $CALG_AES_256) Then ; Decrypt the file.
 		$res=true
+		;MsgBox($MB_SYSTEMMODAL, "Success", "Operation succeeded.")
 	Else
 		$res=false
 		Switch @error
@@ -231,7 +245,9 @@ Func FP_deCrypt($sSourceRead)
 				MsgBox($MB_SYSTEMMODAL, "Grinfico - Error", "Decryption error.")
 		EndSwitch
 	EndIf
+
 	return $res
+
 Endfunc
 
 Func StringEncrypt($bEncrypt, $sData, $sPassword)
