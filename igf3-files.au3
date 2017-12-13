@@ -1,21 +1,3 @@
-#include <File.au3>
-
-#cs
-Row|Col 0|Col 1|Col 2
-[0]|3||
-[1]|6|PackBrowse|C:\Users\Ta Coen\Documents\grinfico\pack
-[2]|7|PackClose|
-[3]|8|KeyFold|
-[4]|9||
-[5]|10|AppClose|
-[6]|4||
-[7]|11|Story_load|
-[8]|12|Story_save|
-[9]|13|Story_restart|C:\IGF\new2\scenario.ini
-[10]|5||
-[11]|14|About_This|
-#ce
-
 Func RunOnce()
 
 	if Not FileExists(@Scriptdir&"/prop") Then DirCreate(@Scriptdir&"/prop")
@@ -69,8 +51,27 @@ Func SetKey($s)
 	local $sk = FileReadLine($fo)
 	FileClose($fo)
 	Dim $igf_passkey = StringEncrypt(False, $sk, 'actiopossesivo')
-	if @Compiled==0 Then ConsoleWrite("key"&@TAB&"= "&$igf_passkey)
+	if @Compiled==0 Then ConsoleWrite("key"&@TAB&"= "&$igf_passkey&@CRLF)
 EndFunc
+
+#cs
+Row|Col 0|Col 1|Col 2|Col 3
+[0]|file|3||
+[1]|open|6|PackBrowse|C:\Users\Ta Coen\Documents\grinfico\pack
+[2]|close|7|PackClose|
+[3]||8||
+[4]|keys|9|Keys|
+[5]||10||
+[6]|exit|11|AppClose|
+[7]||4||
+[8]|load|12|Story_load|C:\Users\Ta Coen\Documents\grinfico\saved
+[9]|save|13|Story_save|C:\Users\Ta Coen\Documents\grinfico\saved
+[10]|restart|14|Story_restart|
+[11]||5||
+[12]|about|15|About_This|
+[13]|key1|16|SetKey|key1=possesive_pose.key
+[14]|key2|17|SetKey|key2=taikucing.key
+#ce
 
 func igf_menus($file)
 	Dim $hMenu[0][4]
@@ -90,9 +91,7 @@ func igf_menus($file)
 	_ArrayAdd( $hMenu, "restart" &"|"& GUICtrlCreateMenuItem("&Restart",$menu_book)&"|"&"Story_restart"&"|"& $file )
 	_ArrayAdd( $hMenu, "" &"|"& $menu_help &"|"& "" &"|"& "" )
 	_ArrayAdd( $hMenu, "about" &"|"& GUICtrlCreateMenuItem("&About",$menu_help)&"|"&"About_This"&"|"& "" )
-
 	igf_keylist()
-
 	return $hMenu
 EndFunc
 
@@ -110,16 +109,20 @@ Func PackBrowse($folder)
 	EndIf
 
 	if $sFileOpenDialog<>"" Then
-		FP_deCrypt($sFileOpenDialog)
-		local $we = _Zip_UnzipAll($Playdir&"\_play.zip", $PlayDir, 20+512)
-		;ConsoleWrite($we & " -- "& $sFileOpenDialog &"->"& $Playdir &@CRLF)
-		PackOpen($PlayDir&"\scenario.ini")
+		local $res = FP_deCrypt($sFileOpenDialog)
+		if $res == true Then
+			local $we = _Zip_UnzipAll($Playdir&"\_play.zip", $PlayDir, 20+512)
+			PackOpen($PlayDir&"\scenario.ini")
+		Endif
 	Endif
 EndFunc
 
 Func PackOpen($file)
 	Dim $inifile = $file
 	FileChangeDir(GetDir($inifile));
+	GUICtrlSetState(GetMenuGUI('save'),$GUI_ENABLE)
+	GUICtrlSetState(GetMenuGUI('load'),$GUI_ENABLE)
+	GUICtrlSetState(GetMenuGUI('restart'),$GUI_ENABLE)
 	LoadConfig($inifile);
 	ResetParam()
 	Init_Scorebar()
@@ -145,6 +148,7 @@ Func Story_save()
 	local $key = GetConf('keyword');
 	local $data[0][2]
 	local $sbeen;
+	local $stamp = @YEAR&@MON&@MDAY&@HOUR&@MIN&@SEC
 
 	; Data Collecting
 
@@ -155,18 +159,18 @@ Func Story_save()
 	$sbeen = StringTrimRight($sbeen,1)
 
 	for $i=0 to Ubound($aScore)-1
-		ConsoleWrite($aScore[$i][0]&@CRLF)
 		_ArrayAdd($data, $aScore[$i][0] &"|"& $aScore[$i][2] )
 	Next
 
-	local $stamp = @YEAR&@MON&@MDAY&@HOUR&@MIN&@SEC
-
 	_ArrayAdd($data, "been" &"|"& $sbeen)
 	_ArrayAdd($data, "section" &"|"& $Last_Section)
-	_ArrayAdd($data, "Stamp" &"|"& $stamp)
+	_ArrayAdd($data, "stamp" &"|"& $stamp)
 
 	$save_file = FilesaveDialog("Grinfico - Saved Files", @MyDocumentsDir&"\grinfico\saved" ,"All (*."&$key&".ini)", $FD_PATHMUSTEXIST+$FD_PROMPTOVERWRITE)
-	local $r= IniWriteSection ($save_file, "data", $data,0 )
+
+	if $save_file <> "" Then
+		local $r= IniWriteSection ($save_file, "data", $data,0 )
+	Endif
 
 	FileChangeDir(GetDir($inifile));
 
@@ -184,28 +188,23 @@ Func Story_load()
 
 	if $sFileOpenDialog<>"" Then
 		local $data = IniReadSection($sFileOpenDialog,"data")
+		local $aS
 
 		; populated data
 
 		PackClose()
-
 		Init_Scorebar()
-
-		local $aS
 		for $i= 0 to Ubound($aScore)-1
 			local $s = $aScore[$i][0];
 			local $n = _ArraySearch($data,$s)
 			Scoring("set",$s,$data[$n][1])
-			;ConsoleWrite($n &"-->"* $i&@CRLF)
 		Next
 
 		For $i=1 to Ubound($data)-1
-			;Scoring("set",$data[$i][0],$data[$i][1]) ; will skip not score?
 			if $data[$i][0] == "been" Then Dim $aBeen = StringSplit($data[$i][1],",")
 			if $data[$i][0] == "section" Then $goto = $data[$i][1]
 		Next
 
-		;_ArrayDisplay($data)
 		FileChangeDir(GetDir($inifile));
 		Init_PlayArea()
 		GUICtrlSetState($hPA, $GUI_FOCUS)
@@ -213,46 +212,36 @@ Func Story_load()
 		SectionThread($goto)
 
 	Endif
-
 EndFunc
-
 
 Func FP_deCrypt($sSourceRead)
 	local $res
 	If _Crypt_DecryptFile($sSourceRead, $PlayDir&"\_play.zip", $igf_passkey , $CALG_AES_256) Then ; Decrypt the file.
 		$res=true
-		;MsgBox($MB_SYSTEMMODAL, "Success", "Operation succeeded.")
 	Else
 		$res=false
 		Switch @error
 			Case 1
-				MsgBox($MB_SYSTEMMODAL, "Error", "Failed to create the key.")
-				exit
+				MsgBox($MB_SYSTEMMODAL, "Grinfico - Error", "Failed to create the key.")
 			Case 2
-				MsgBox($MB_SYSTEMMODAL, "Error", "Couldn't open the source file.")
-				exit
+				MsgBox($MB_SYSTEMMODAL, "Grinfico - Error", "Couldn't open the source file.")
 			Case 3
-				MsgBox($MB_SYSTEMMODAL, "Error", "Couldn't open the destination file.")
-				exit
+				MsgBox($MB_SYSTEMMODAL, "Grinfico - Error", "Couldn't open the destination file.")
 			Case 4 Or 5
-				MsgBox($MB_SYSTEMMODAL, "Error", "Decryption error.")
-				exit
+				MsgBox($MB_SYSTEMMODAL, "Grinfico - Error", "Decryption error.")
 		EndSwitch
 	EndIf
-
 	return $res
-
 Endfunc
 
-
 Func StringEncrypt($bEncrypt, $sData, $sPassword)
-    _Crypt_Startup() ; Start the Crypt library.
-    Local $sReturn = ''
-    If $bEncrypt Then ; If the flag is set to True then encrypt, otherwise decrypt.
-        $sReturn = _Crypt_EncryptData($sData, $sPassword, $CALG_AES_128)
-    Else
-        $sReturn = BinaryToString(_Crypt_DecryptData($sData, $sPassword, $CALG_AES_128))
-    EndIf
-    _Crypt_Shutdown() ; Shutdown the Crypt library.
-    Return $sReturn
+	_Crypt_Startup() ; Start the Crypt library.
+	Local $sReturn = ''
+	If $bEncrypt Then ; If the flag is set to True then encrypt, otherwise decrypt.
+		$sReturn = _Crypt_EncryptData($sData, $sPassword, $CALG_AES_128)
+	Else
+		$sReturn = BinaryToString(_Crypt_DecryptData($sData, $sPassword, $CALG_AES_128))
+	EndIf
+	_Crypt_Shutdown() ; Shutdown the Crypt library.
+	Return $sReturn
 EndFunc

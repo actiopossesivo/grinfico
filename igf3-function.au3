@@ -8,6 +8,7 @@
 #include <Array.au3>
 #include <String.au3>
 #include <GuiMenu.au3>
+#include <File.au3>
 #include <Crypt.au3>
 
 #Include <lib/Icons.au3>
@@ -27,6 +28,7 @@ Func LoadConfig($file='scenario.ini',$reset=0)
 	local $bgdialog = @ScriptDir&"\prop\dialog.png"
 	local $bgcolor = "111111"
 	local $sbbgcolor = "222222"
+	local $sbbgimg = @ScriptDir&"\prop\scorebar.png";
 	local $tcolor = "AAAAAA"
 	local $hcolor = "FFF0FF"
 
@@ -58,6 +60,10 @@ Func LoadConfig($file='scenario.ini',$reset=0)
 
 		Case 'sbbgcolor'
 			$sbbgcolor = $conf[$i][1]
+
+		Case 'sbbgimg'
+			$sbbgimg = $conf[$i][1]
+			if FileExists($f) Then $sbbgimg = @WorkingDir&"\"&$conf[$i][1]
 		Case 'bgcolor'
 			$bgcolor = $conf[$i][1]
 		Case 'tcolor'
@@ -118,7 +124,9 @@ Func LoadConfig($file='scenario.ini',$reset=0)
 	$aConf = _ArrayReplace($aConf,'sbbgcolor' &"|" & $sbbgcolor )
 	$aConf = _ArrayReplace($aConf,'tcolor' &"|" & $tcolor )
 	$aConf = _ArrayReplace($aConf,'hcolor' &"|" & $hcolor )
+
 	$aConf = _ArrayReplace($aConf,'bgdialog' &"|" & $bgdialog )
+	$aConf = _ArrayReplace($aConf,'sbbgimg' &"|" & $sbbgimg )
 
 	$aSize = _ArrayReplace($aSize, "font" &"|"& $fontsize &"|"& 2*$fontsize )
 	$aSize = _ArrayReplace($aSize, "prompt" &"|"& $hbtn_width &"|"& $vbtn_width )
@@ -280,7 +288,9 @@ Func ReSize($m=0)
 	$d[1] = $p[3]/2 - $d[3]/2 - 16
 	if $d[0]<0 Then $d[0]=0
 	if $d[1]<0 Then $d[1]=0
-	WinMove ( $hSB,"",$d[0],$d[1]-(3*$f[0])-($f[0]/2))
+	if $hSB<>"" Then
+		WinMove ( $hSB,"",$d[0],$d[1]-(3*$f[0])-($f[0]/2))
+	Endif
 	if $hPA<>"" Then
 		WinMove ( $hPA,"",$d[0],$d[1])
 		GUICtrlSetState($hPA, $GUI_FOCUS)
@@ -348,7 +358,9 @@ Func Init_Win($file)
 	$label = GUICtrlCreatePic(@Scriptdir&"\prop\grinfico.jpg",$d[2]/2-75,$d[3]/2-110,150,220)
 	_ArrayAdd($aDisposal, $label)
 
-	;_ArrayDisplay($hMenu)
+	GUICtrlSetState(GetMenuGUI('save'),$GUI_DISABLE)
+	GUICtrlSetState(GetMenuGUI('load'),$GUI_DISABLE)
+	GUICtrlSetState(GetMenuGUI('restart'),$GUI_DISABLE)
 
 	GuiSetState(@SW_SHOW,$hWin)
 
@@ -360,7 +372,7 @@ Func Init_ScoreBar()
 	$hSB = GUICreate("ScoreBar",$d[2],$d[3],$d[0],$d[1], BitOR($WS_CHILD,$WS_BORDER),$WS_EX_TOPMOST, $hWin)
 	GUISetBkColor("0x"&GetConf('sbbgcolor'),$hSB)
 	GUISetFont($f[0]*.85,700,Default,GetConf('fontname'),$hSB,5)
-	PNG(@ScriptDir&"\prop\scorebar.png",0,0,$d[2],$d[3],0)
+	PNG(GetConf('sbbgimg'),0,0,$d[2],$d[3],0)
 	local $cw = 40
 	local $cp = $cw/8
 	local $n=0

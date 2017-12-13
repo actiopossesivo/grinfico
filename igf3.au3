@@ -3,7 +3,7 @@
 #include <igf3-files.au3>
 #include <igf3-routine.au3>
 
-#pragma compile(Out, Grinfico.exe)
+#pragma compile(Out, compiled\Grinfico.exe)
 #pragma compile(Icon, C:\igf\1\icon.ico)
 #pragma compile(Compatibility, vista, win7, win8, win81, win10)
 #pragma compile(FileDescription, an Interactive Fictions Engine)
@@ -43,9 +43,6 @@ if $CmdLine[0]>0 Then
 Endif
 
 Init_Win($inifile)
-
 if ($inifile <> "") Then PackOpen($inifile)
-
 GUI_Function("")
-
 Exit

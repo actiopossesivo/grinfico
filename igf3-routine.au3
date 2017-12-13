@@ -321,7 +321,7 @@ Func GUIHandle($sw,$click,$handle='')
 	case "pa"
 
 		if not IsArray($handle) Then
-			MsgBox(0,'',"Handle must in array")
+			MsgBox(0,'Grinfico',"Handle must in array")
 		Endif
 
 		for $i = 0 to UBound($handle)-1
