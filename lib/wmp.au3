@@ -27,7 +27,7 @@ Return: None
 #ce
 Func _wmploadmedia( $object, $URL, $autostart = 1 )
     $object.URL = $URL
-	$object.player.stretchToFit=true
+	;$object.player.stretchToFit=true
     While Not $object.controls.isAvailable("play")
         Sleep(1)
     WEnd
