@@ -10,6 +10,7 @@ Func SectionThread($section, $param='')
 	local $d = GetDimension_of('Playarea')
 	local $next_page = ""
 	local $gtext[0]
+	local $gcap[0][3]
 	local $gpng[0][5]
 	local $gvid[0][5]
 	local $ggif[0][5]
@@ -18,6 +19,10 @@ Func SectionThread($section, $param='')
 	local $gvbutton[0][2]
 	local $shake=0
 	local $wait=0
+	local $tend=0
+	local $nosave = 0
+
+	$dcap = ClearingGUICtrl($dcap)
 
 	if @compiled==0 Then ConsoleWrite("Section"&@TAB&"= "&$Section&"("&$current&"/"&Ubound($Sections)-1&")"&@CRLF)
 
@@ -41,7 +46,6 @@ Func SectionThread($section, $param='')
 
 			Case "wait"
 				$wait = Number($opt[$i][1])
-				if @Compiled==0 Then ConsoleWrite("VAL="&$opt[$i][1]&@CRLF)
 
 			Case "condition"
 				local $cond = StringSplit($opt[$i][1],"|")
@@ -60,13 +64,18 @@ Func SectionThread($section, $param='')
 			Case "goto"
 				$next_page = $opt[$i][1]
 
+			Case "nosave"
+				$nosave = 1
+
 			Case "scene"
 				$dpng = ClearingGUICtrl($dpng)
 				$dgif = ClearingGUICtrl($dgif)
 				GUICtrlDelete($scene)
 				$scene = PNG($opt[$i][1], 0,0,$d[2],$d[3],0)
 				$Last_Section = $section
-				GUICtrlSetState(GetMenuGUI("save"),$GUI_ENABLE) ; Can Save
+				if $nosave <> 1 Then
+					GUICtrlSetState(GetMenuGUI("save"),$GUI_ENABLE) ; Can Save
+				endif
 
 			case "mp3"
 				if FileExists($opt[$i][1]) Then
@@ -82,6 +91,9 @@ Func SectionThread($section, $param='')
 
 			Case "text"
 				_ArrayAdd($gtext,$opt[$i][1])
+
+			Case "caption"
+				_ArrayAdd($gcap,$opt[$i][1],0,"|")
 
 			Case "button"
 				_ArrayAdd($gvbutton,$opt[$i][1],0,"|")
@@ -108,7 +120,7 @@ Func SectionThread($section, $param='')
 		EndSwitch
 	Next
 
-	DebugArray($aScore,3)
+;	DebugArray($aScore,3)
 	local $b
 
 	if Ubound($gpng)>0 Then
@@ -134,17 +146,25 @@ Func SectionThread($section, $param='')
 		_ArrayAdd($dgif,$pic)
 	Endif
 
+	if Ubound($gcap)>0 Then
+		for $i = 0 to Ubound($gcap)-1
+			caption($gcap[$i][0],$gcap[$i][1],$gcap[$i][2])
+		Next
+	Endif
+
 	local $nonpage=0
-	if Ubound($ghbutton)>-1 OR Ubound($gvbutton)>-1 OR Ubound($gspot)>-1 Then $nonpage=1
+	if Ubound($ghbutton)>0 OR Ubound($gvbutton)>0 OR Ubound($gspot)>0 Then $nonpage=1
 
 	if $shake>0 then ShakePlayarea($shake)
 
 	if $wait > 0  then
-		if @Compiled==0 Then ConsoleWrite("wait="&$wait * 1000&@CRLF)
+		$tend=0
 		Sleep($wait*1000)
+		if @Compiled==0 Then ConsoleWrite("Wait"&@TAB&"= "&$wait&@CRLF)
 	Endif
 
-	if Ubound($gtext)>-1 Then
+	if Ubound($gtext)>0 Then
+		$tend=1
 		local $r
 		local $next =""
 		for $i = 0 to UBound($gtext)-1
@@ -154,9 +174,18 @@ Func SectionThread($section, $param='')
 		Next
 	Endif
 
-	if Ubound($ghbutton)>-1 OR Ubound($gvbutton)>-1 OR Ubound($gspot)>-1 Then
+	if Ubound($ghbutton)>0 OR Ubound($gvbutton)>0 OR Ubound($gspot)>0 Then
+		$tend=1
 		$r = Prompting($ghbutton, $gvbutton, $gspot)
 	Endif
+
+	if $tend==0 AND $next_page<>"" then SectionThread($next_page)
+
+	if $next_page=="" then
+		Msgbox(0,"Grinfico","Missing plot?")
+		SectionThread('begin')
+	endif
+
 
 	exit
 
@@ -199,6 +228,48 @@ Func Text_isArray($txt)
 	Else
 		return $txt
 	EndIf
+EndFunc
+
+Func Caption($txt,$color="FFFFFF",$top=0)
+	local $tb = PNG(GetConf('bgdialog'),-1,-1,1,1,1)
+	GUICtrlSetBkColor($tb,$GUI_BKCOLOR_TRANSPARENT )
+
+	local $d = GetDimension_of('inside')
+	local $f = GetSize_of('font')
+
+	$d[3] = calc_height($f[1], $d, $txt)
+	$d[1] = $d[1] - $top - $d[3] - $f[0]
+
+	local $aTxt = Text_isArray($txt)
+
+	if IsArray($aTxt) Then
+		$add = $f[1]
+		if FileExists($aTxt[0]&"-icon.png") Then
+			$ah = PNG($aTxt[0]&"-icon.png",$d[0]-$f[0],$d[1]-$add-64-$f[0],64,64,0)
+			GUICtrlSetBkColor($ah,$GUI_BKCOLOR_TRANSPARENT )
+			_ArrayAdd($dcap,$ah)
+		Endif
+		local $ta = GUICtrlCreateLabel($aTxt[0], $d[0], $d[1]-$add, $d[2], $d[3]+$add )
+		GUICtrlSetColor($ta,"0x"&GetConf('hcolor'))
+		GUICtrlSetFont($ta,$f[0]*.9,700)
+		GUICtrlSetBkColor($ta,$GUI_BKCOLOR_TRANSPARENT )
+		$txt = StringStripWS($aTxt[1],3)
+		_ArrayAdd($dcap,$ta)
+	Else
+		$txt = $aTxt
+	Endif
+
+	local $th = GUICtrlCreateLabel($txt,$d[0],$d[1],$d[2],$d[3])
+	GUICtrlSetColor($th,"0x"&$color)
+	GUICtrlSetBkColor($th,$GUI_BKCOLOR_TRANSPARENT)
+	GUICtrlSetFont($th,$f[0],400)
+	_ArrayAdd($dcap,$th)
+
+	GUICtrlSetPos($tb, $d[0]-$f[0], ($d[1]-$f[0])-$add, $d[2]+$f[0]*2, $d[3]+($f[1])+$add )
+	_ArrayAdd($dcap,$tb)
+
+	GuiCtrlSetState($th, $GUI_ONTOP)
+
 EndFunc
 
 Func Text($top,$txt,$goto)

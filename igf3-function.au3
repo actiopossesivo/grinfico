@@ -63,7 +63,10 @@ Func LoadConfig($file='scenario.ini',$reset=0)
 
 		Case 'sbbgimg'
 			$sbbgimg = $conf[$i][1]
-			if FileExists($sbbgimg) Then $sbbgimg = $conf[$i][1]
+			if $sbbgimg<>"" Then
+				if FileExists($sbbgimg) Then $sbbgimg = $conf[$i][1]
+			Endif
+
 		Case 'bgcolor'
 			$bgcolor = $conf[$i][1]
 		Case 'tcolor'
@@ -218,6 +221,7 @@ EndFunc
 
 Func GIF($file,$left=0,$top=0,$width=-1,$height=-1)
 	local $hGIF = _GUICtrlCreateGIF($file, "", $left, $top, $width, $height,1)
+	GuiCtrlSetState($hGIF, $GUI_DISABLE)
 	return $hGif
 EndFunc
 

@@ -23,6 +23,7 @@ Global $aBeen[0]
 Global $aDisposal[0]
 Global $dpng[0]
 Global $dgif[0]
+Global $dcap[0]
 Global $scene
 Global $Playdir
 Global $Last_Section = ''

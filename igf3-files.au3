@@ -20,7 +20,7 @@ Func RunOnce()
 	Dim $Playdir = @TempDir&"\grinfico"
 
 	if Not FileExists(@MyDocumentsDir&"\grinfico") Then DirCreate(@MyDocumentsDir&"\grinfico")
-	FileInstall("1\possesive_pose.ke_",@MyDocumentsDir&"\grinfico\possesive_pose.key",0)
+	if Not FileExists(@MyDocumentsDir&"\grinfico\grinfico.key") Then FileInstall("1\possesive_pose.ke_",@MyDocumentsDir&"\grinfico\grinfico.key",0)
 
 	if Not FileExists(@MyDocumentsDir&"\grinfico\pack") Then DirCreate(@MyDocumentsDir&"\grinfico\pack")
 	if Not FileExists(@MyDocumentsDir&"\grinfico\saved") Then DirCreate(@MyDocumentsDir&"\grinfico\saved")
@@ -29,16 +29,16 @@ Func RunOnce()
 
 EndFunc
 
-func igf_keylist()
+func keylist_Menu()
 	$root = GetMenuGui('keys')
 	Dim $hKey[0]
 	local $n=0
 	$aKeys = _FileListToArray (@MyDocumentsDir&"\grinfico","*.key")
 	for $k = 1 to Ubound($aKeys)-1
 		local $fname = StringSplit($aKeys[$k],".")
-		local $keymenu = GUICtrlCreateMenuItem($fname[1],$root);
+		local $keymenu = GUICtrlCreateMenuItem($fname[1],$root)
 		_ArrayAdd( $hMenu, "key"&$k &"|"& $keymenu &"|"&"SetKey"&"|"& "key"&$k &"="& $aKeys[$k] )
-		_ArrayAdd ($hKey, $keymenu);
+		_ArrayAdd ($hKey, $keymenu)
 	next
 Endfunc
 
@@ -55,25 +55,6 @@ Func SetKey($s)
 	Dim $igf_passkey = StringEncrypt(False, $sk, 'actiopossesivo')
 	if @Compiled==0 Then ConsoleWrite("key"&@TAB&"= "&$igf_passkey&@CRLF)
 EndFunc
-
-#cs
-Row|Col 0|Col 1|Col 2|Col 3
-[0]|file|3||
-[1]|open|6|PackBrowse|C:\Users\Ta Coen\Documents\grinfico\pack
-[2]|close|7|PackClose|
-[3]||8||
-[4]|keys|9|Keys|
-[5]||10||
-[6]|exit|11|AppClose|
-[7]||4||
-[8]|load|12|Story_load|C:\Users\Ta Coen\Documents\grinfico\saved
-[9]|save|13|Story_save|C:\Users\Ta Coen\Documents\grinfico\saved
-[10]|restart|14|Story_restart|
-[11]||5||
-[12]|about|15|About_This|
-[13]|key1|16|SetKey|key1=possesive_pose.key
-[14]|key2|17|SetKey|key2=taikucing.key
-#ce
 
 func igf_menus($file)
 	Dim $hMenu[0][4]
@@ -94,7 +75,7 @@ func igf_menus($file)
 	_ArrayAdd( $hMenu, "" &"|"& $menu_help &"|"& "" &"|"& "" )
 	_ArrayAdd( $hMenu, "about" &"|"& GUICtrlCreateMenuItem("&About",$menu_help)&"|"&"About_This"&"|"& "" )
 
-	igf_keylist()
+	keylist_Menu()
 
 	return $hMenu
 EndFunc
@@ -104,7 +85,7 @@ Func Igf_cleanup()
 Endfunc
 
 Func PackBrowse($folder)
-	Local $sFileOpenDialog = FileOpenDialog("Open IGF", $folder, "All (*.igf)", $FD_FILEMUSTEXIST)
+	Local $sFileOpenDialog = FileOpenDialog("Open IGF", $folder, "All (*.igf;*.zip)", $FD_FILEMUSTEXIST)
 	If @error Then
 		$sFileOpenDialog=''
 	Else
@@ -113,25 +94,26 @@ Func PackBrowse($folder)
 	EndIf
 
 	if $sFileOpenDialog<>"" Then
-		local $res = FP_deCrypt($sFileOpenDialog)
-		if $res == true Then
-			local $we = _Zip_UnzipAll($Playdir&"\_play.zip", $PlayDir, 20+512)
-			;ConsoleWrite($we & " -- "& $sFileOpenDialog &"->"& $Playdir &@CRLF)
+		local $ext = StringRight($sFileOpenDialog, 4)
+		if $ext==".igf" Then
+			local $res = FP_deCrypt($sFileOpenDialog)
+			If $res == true Then
+				local $we = _Zip_UnzipAll($Playdir&"\_play.zip", $PlayDir, 20+512)
+			Endif
+		Else
+			local $we = _Zip_UnzipAll($sFileOpenDialog, $PlayDir, 20+512)
 			PackOpen($PlayDir&"\scenario.ini")
-
 		Endif
 	Endif
 EndFunc
 
 Func PackOpen($file)
 	Dim $inifile = $file
-	FileChangeDir(GetDir($inifile));
-
+	FileChangeDir(GetDir($inifile))
 	GUICtrlSetState(GetMenuGUI('save'),$GUI_ENABLE)
 	GUICtrlSetState(GetMenuGUI('load'),$GUI_ENABLE)
 	GUICtrlSetState(GetMenuGUI('restart'),$GUI_ENABLE)
-
-	LoadConfig($inifile);
+	LoadConfig($inifile)
 	ResetParam()
 	Init_Scorebar()
 	Init_PlayArea()
@@ -142,6 +124,8 @@ EndFunc
 
 Func PackClose()
 	ResetParam()
+	Dim $aScore[0][5]
+	Dim $aBeen[0]
 	GUIDelete($hSB)
 	GUIDelete($hPA)
 EndFunc
@@ -153,7 +137,7 @@ Func Story_restart($file)
 EndFunc
 
 Func Story_save()
-	local $key = GetConf('keyword');
+	local $key = GetConf('keyword')
 	local $data[0][2]
 	local $sbeen;
 
@@ -179,12 +163,12 @@ Func Story_save()
 	$save_file = FilesaveDialog("Grinfico - Saved Files", @MyDocumentsDir&"\grinfico\saved" ,"All (*."&$key&".ini)", $FD_PATHMUSTEXIST+$FD_PROMPTOVERWRITE)
 	local $r= IniWriteSection ($save_file, "data", $data,0 )
 
-	FileChangeDir(GetDir($inifile));
+	FileChangeDir(GetDir($inifile))
 
 EndFunc
 
 Func Story_load()
-	local $key = GetConf('keyword');
+	local $key = GetConf('keyword')
 
 	Local $sFileOpenDialog = FileOpenDialog("Open Savefile", @MyDocumentsDir&"\grinfico\saved", "All (*."&$key&".ini)", $FD_FILEMUSTEXIST)
 	If @error Then
@@ -217,7 +201,7 @@ Func Story_load()
 		Next
 
 		;_ArrayDisplay($data)
-		FileChangeDir(GetDir($inifile));
+		FileChangeDir(GetDir($inifile))
 		Init_PlayArea()
 		GUICtrlSetState($hPA, $GUI_FOCUS)
 		ReSize()
